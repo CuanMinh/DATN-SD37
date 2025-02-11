@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <title>TryOn Admin</title>
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" th:href="@{/../../assets/favicon.ico}"/>
+
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <!-- CSS only -->
+    <link rel="stylesheet" th:href="@{/../../css/styles.css}">
+    <link rel="stylesheet" th:href="@{/../../css/product.css}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+          integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script th:src="@{/../../js/app.js}"></script>
+    <script th:src="@{/../../js/product.js}"></script>
+
+    <!-- Nhúng Font Awesome (phiên bản 6) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH/PRul+UM7NeK7Kc4N/nhCefYx4SKCM6ykz6QwE3Uk3t6qBp57e7QoD95sdwfrWnFJwYOWw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+<!-- Navigation-->
+<div th:replace="admin/fragments/nav::nav"></div>
+
+<!-- Page Content-->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Menu -->
+        <div th:replace="admin/fragments/menu::menu"></div>
+
+        <!-- Content -->
+        <div layout:fragment="content"></div>
+
+    </div>
+</div>
+<!-- Footer-->
+<div th:replace="admin/fragments/footer::footter"></div>
+
+
+<!-- Bootstrap core JS-->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!--    thông báo -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#collapseProduct').on('show.bs.collapse', function () {
+            $('a[href="#collapseProduct"] .arrow-indicator').html('&#9662;');
+        });
+        $('#collapseProduct').on('hide.bs.collapse', function () {
+            $('a[href="#collapseProduct"] .arrow-indicator').html('&#9656;');
+        });
+
+        $('#collapseAccount').on('show.bs.collapse', function () {
+            $('a[href="#collapseAccount"] .arrow-indicator').html('&#9662;');
+        });
+        $('#collapseAccount').on('hide.bs.collapse', function () {
+            $('a[href="#collapseAccount"] .arrow-indicator').html('&#9656;');
+        });
+
+        $('#collapseHoaDon').on('show.bs.collapse', function () {
+            $('a[href="#collapseHoaDon"] .arrow-indicator').html('&#9662;');
+        });
+        $('#collapseHoaDon').on('hide.bs.collapse', function () {
+            $('a[href="#collapseHoaDon"] .arrow-indicator').html('&#9656;');
+        });
+
+        $('#collapseGiamGia').on('show.bs.collapse', function () {
+            $('a[href="#collapseGiamGia"] .arrow-indicator').html('&#9662;');
+        });
+        $('#collapseGiamGia').on('hide.bs.collapse', function () {
+            $('a[href="#collapseGiamGia"] .arrow-indicator').html('&#9656;');
+        });
+
+        $('#collapseThongKe').on('show.bs.collapse', function () {
+            $('a[href="#collapseThongKe"] .arrow-indicator').html('&#9662;');
+        });
+        $('#collapseThongKe').on('hide.bs.collapse', function () {
+            $('a[href="#collapseThongKe"] .arrow-indicator').html('&#9656;');
+        });
+
+        $('#collapseKhac').on('show.bs.collapse', function () {
+            $('a[href="#collapseKhac"] .arrow-indicator').html('&#9662;');
+        });
+        $('#collapseKhac').on('hide.bs.collapse', function () {
+            $('a[href="#collapseKhac"] .arrow-indicator').html('&#9656;');
+        });
+
+
+    });
+</script>
+</body>
+
+</html>
