@@ -20,7 +20,7 @@ public class IEmailTemplateServiceImpl implements IEmailTemplateService {
     public void sendMaXacNhanToEmail(Integer mailType) {
 
         final String username = "buidaithang16122003@gmail.com";
-        final String password = "mật khẩu ứng dụng"; // mật khẩu ứng dụng
+        final String password = "mvhlkegmrghvsonn"; // mật khẩu ứng dụng
 
         // Cài đặt thông tin host và port cho Gmail
         Properties props = new Properties();

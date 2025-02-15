@@ -101,7 +101,7 @@ public class HoaDon {
     private DiaChi diaChi;
 
     @ManyToOne
-    @JoinColumn(name = "phuong_thuc_thanh_toan")
+    @JoinColumn(name = "phuong_thuc_thanh_toan_id")
     private PhuongThucThanhToan phuongThucThanhToan;
 
 
