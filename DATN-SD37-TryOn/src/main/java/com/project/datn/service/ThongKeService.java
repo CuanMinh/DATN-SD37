@@ -1,5 +1,6 @@
 package com.project.datn.service;
 
+import com.project.datn.controller.admin.DTO.ThongKeDoanhThuDTO;
 import com.project.datn.model.ThongKeDoanhThu;
 import com.project.datn.repository.ThongKeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,15 +13,15 @@ public class ThongKeService {
     @Autowired
     private ThongKeRepository thongKeRepository;
 
-    public List<ThongKeDoanhThu> getDoanhThuTheoNgay() {
+    public List<ThongKeDoanhThuDTO> thongKeDoanhThuTheoNgay() {
         return thongKeRepository.thongKeDoanhThuTheoNgay();
     }
 
-    public List<ThongKeDoanhThu> getDoanhThuTheoThang() {
+    public List<ThongKeDoanhThuDTO> thongKeDoanhThuTheoThang() {
         return thongKeRepository.thongKeDoanhThuTheoThang();
     }
 
-    public List<ThongKeDoanhThu> getDoanhThuTheoNam() {
+    public List<ThongKeDoanhThuDTO> thongKeDoanhThuTheoNam() {
         return thongKeRepository.thongKeDoanhThuTheoNam();
     }
 }

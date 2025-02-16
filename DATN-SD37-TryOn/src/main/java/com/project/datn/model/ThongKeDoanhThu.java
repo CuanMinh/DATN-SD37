@@ -26,4 +26,5 @@ public class ThongKeDoanhThu {
         this.nam = nam;
         this.doanhThu = doanhThu;
     }
+
 }
