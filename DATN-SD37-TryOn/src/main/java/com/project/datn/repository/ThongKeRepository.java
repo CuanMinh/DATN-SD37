@@ -1,19 +1,19 @@
 package com.project.datn.repository;
 
 import com.project.datn.controller.admin.DTO.ThongKeDoanhThuDTO;
-import com.project.datn.model.ThongKeDoanhThu;
+
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
-
+@Transactional(readOnly = true)
 public class ThongKeRepository {
 
     @PersistenceContext
@@ -24,8 +24,6 @@ public class ThongKeRepository {
                 "FROM hoa_don " +
                 "GROUP BY CONVERT(DATE, ngay_tao_hoa_don) " +
                 "ORDER BY ngay";
-//        Query query = entityManager.createNativeQuery(sql, "ThongKeDoanhThuMapping");
-//        return query.getResultList();
         Query query = entityManager.createNativeQuery(sql);
         List<Object[]> resultList = query.getResultList();
 
@@ -41,15 +39,13 @@ public class ThongKeRepository {
                 "FROM hoa_don " +
                 "GROUP BY YEAR(ngay_tao_hoa_don), MONTH(ngay_tao_hoa_don) " +
                 "ORDER BY nam, thang";
-//        Query query = entityManager.createNativeQuery(sql, "ThongKeDoanhThuMapping");
-//        return query.getResultList();
         Query query = entityManager.createNativeQuery(sql);
         List<Object[]> resultList = query.getResultList();
 
         return resultList.stream().map(row -> new ThongKeDoanhThuDTO(
-                row[1] != null ? Integer.valueOf(row[1].toString()) : null,  // thang ✅ (đúng)
-                row[0] != null ? Integer.valueOf(row[0].toString()) : null,  // nam ✅ (đúng)
-                row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO // tongTien
+                row[1] != null ? Integer.valueOf(row[1].toString()) : null,
+                row[0] != null ? Integer.valueOf(row[0].toString()) : null,
+                row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO
         )).collect(Collectors.toList());
 
 
@@ -60,8 +56,6 @@ public class ThongKeRepository {
                 "FROM hoa_don " +
                 "GROUP BY YEAR(ngay_tao_hoa_don) " +
                 "ORDER BY nam";
-//        Query query = entityManager.createNativeQuery(sql, "ThongKeDoanhThuMapping");
-//        return query.getResultList();
         Query query = entityManager.createNativeQuery(sql);
         List<Object[]> resultList = query.getResultList();
 
