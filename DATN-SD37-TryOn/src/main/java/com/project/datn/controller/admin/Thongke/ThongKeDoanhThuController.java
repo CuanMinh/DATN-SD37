@@ -20,21 +20,12 @@ public class ThongKeDoanhThuController {
     @Autowired
     private ThongKeService thongKeService;
 
-    /**
-     * Endpoint này chỉ trả về trang HTML (Thymeleaf).
-     * Khi người dùng truy cập đường dẫn /admin/thongkedoanhthu/page
-     * nó sẽ render ra file "thongkedoanhthu.html".
-     */
     @GetMapping("")
     public String thongKeDoanhThuPage() {
-        // Không trả về danh sách JSON ở đây, chỉ trả về tên view Thymeleaf
         return "admin/thongke/doanhthu/thongkedoanhthu";
     }
 
-    /**
-     * Endpoint này trả về dữ liệu JSON cho AJAX/fetch.
-     * Ví dụ: /admin/thongkedoanhthu/data?type=ngay
-     */
+
     @GetMapping("/data")
     @ResponseBody
     public List<ThongKeDoanhThuDTO> thongKeDoanhThuData(
@@ -50,7 +41,7 @@ public class ThongKeDoanhThuController {
             default:
                 result = thongKeService.thongKeDoanhThuTheoNgay();
         }
-        return result; // Trả về dưới dạng JSON
+        return result;
     }
 }
 

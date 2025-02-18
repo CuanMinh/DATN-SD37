@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 @Repository
 @Transactional(readOnly = true)
 public class ThongKeRepository {
-
     @PersistenceContext
     private EntityManager entityManager;
 
+    @SuppressWarnings("unchecked")
     public List<ThongKeDoanhThuDTO> thongKeDoanhThuTheoNgay() {
         String sql = "SELECT CONVERT(DATE, ngay_tao_hoa_don) AS ngay, SUM(tong_tien) AS doanhThu " +
                 "FROM hoa_don " +
@@ -28,12 +28,12 @@ public class ThongKeRepository {
         List<Object[]> resultList = query.getResultList();
 
         return resultList.stream().map(row -> new ThongKeDoanhThuDTO(
-                row[0] != null ? row[0].toString() : null,   // ngay
-                row[1] != null ? new BigDecimal(row[1].toString()) : BigDecimal.ZERO // tongTien
+                row[0] != null ? row[0].toString() : null,
+                row[1] instanceof Number ? BigDecimal.valueOf(((Number) row[1]).doubleValue()) : BigDecimal.ZERO
         )).collect(Collectors.toList());
-
     }
 
+    @SuppressWarnings("unchecked")
     public List<ThongKeDoanhThuDTO> thongKeDoanhThuTheoThang() {
         String sql = "SELECT YEAR(ngay_tao_hoa_don) AS nam, MONTH(ngay_tao_hoa_don) AS thang, SUM(tong_tien) AS doanhThu " +
                 "FROM hoa_don " +
@@ -43,14 +43,13 @@ public class ThongKeRepository {
         List<Object[]> resultList = query.getResultList();
 
         return resultList.stream().map(row -> new ThongKeDoanhThuDTO(
-                row[1] != null ? Integer.valueOf(row[1].toString()) : null,
-                row[0] != null ? Integer.valueOf(row[0].toString()) : null,
-                row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO
+                row[1] instanceof Number ? ((Number) row[1]).intValue() : null,
+                row[0] instanceof Number ? ((Number) row[0]).intValue() : null,
+                row[2] instanceof Number ? BigDecimal.valueOf(((Number) row[2]).doubleValue()) : BigDecimal.ZERO
         )).collect(Collectors.toList());
-
-
     }
 
+    @SuppressWarnings("unchecked")
     public List<ThongKeDoanhThuDTO> thongKeDoanhThuTheoNam() {
         String sql = "SELECT YEAR(ngay_tao_hoa_don) AS nam, SUM(tong_tien) AS doanhThu " +
                 "FROM hoa_don " +
@@ -60,9 +59,8 @@ public class ThongKeRepository {
         List<Object[]> resultList = query.getResultList();
 
         return resultList.stream().map(row -> new ThongKeDoanhThuDTO(
-                row[0] != null ? Integer.valueOf(row[0].toString()) : null,  // nam
-                row[1] != null ? new BigDecimal(row[1].toString()) : BigDecimal.ZERO // tongTien
+                row[0] instanceof Number ? ((Number) row[0]).intValue() : null,
+                row[1] instanceof Number ? BigDecimal.valueOf(((Number) row[1]).doubleValue()) : BigDecimal.ZERO
         )).collect(Collectors.toList());
-
     }
 }
