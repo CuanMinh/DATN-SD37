@@ -3,10 +3,61 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{admin/admin-layout.html}">
 <head>
+    <style>
+        .btn {
+            border-radius: 0.375rem;
+        }
+    </style>
 </head>
 <body>
 <div layout:fragment="content">
-    <h1> trang chat kieu </h1>>
+
+    <div class="container-fluid p-2 pt-3">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 24px; font-weight: 700;">Chất liệu</span>
+
+            <a href="/admin/chatlieu/them-moi" type="button" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                Thêm mới
+            </a>
+        </div>
+
+        <div class="mt-3">
+            <table id="tb" class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên</th>
+                        <th>Mô tả</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="chatLieu : ${listChatLieu}">
+                        <td th:text="${chatLieu.id}"></td>
+                        <td th:text="${chatLieu.ten}"></td>
+                        <td th:text="${chatLieu.moTa}"></td>
+                        <td th:text="${chatLieu.ngayTao}"></td>
+                        <td th:switch="${chatLieu.trangThai}">
+                            <span th:case="1" class="text-success">Hoạt động</span>
+                            <span th:case="0" class="text-danger">Đã xóa</span>
+                            <span th:case="*" class="text-warning">Không xác định</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/admin/chatlieu/cap-nhat/{id}(id=${chatLieu.id})}" type="button" class="btn btn-primary btn-sm">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <a th:href="@{/admin/chatlieu/xoa/{id}(id=${chatLieu.id})}" onclick="return confirm('Bạn có chắc chắn muốn xóa?')" type="button" class="btn btn-danger btn-sm">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </body>
 </html>

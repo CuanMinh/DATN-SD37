@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/admin-layout.html}">
+<head>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="container-fluid p-2 pt-3">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 24px; font-weight: 700;">Thêm mới màu sắc</span>
+        </div>
+
+        <div class="mt-3">
+            <form th:action="@{/admin/mausac/them-moi}" th:object="${mauSac}" method="post" style="width: 40%">
+                <div class="mb-3">
+                    <label for="ten" class="form-label">Tên</label>
+                    <input id="ten" th:field="*{ten}" required class="form-control" type="text" />
+                </div>
+                <div class="mb-3">
+                    <label for="moTa" class="form-label">Mô tả</label>
+                    <textarea id="moTa" th:field="*{moTa}" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Thêm mới</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

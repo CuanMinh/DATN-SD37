@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/admin-layout.html}">
+<head>
+    <title></title>
+    <style>
+        .upload-container {
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .edit-btn {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="container-fluid p-2 pt-3">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 24px; font-weight: 700;">Thêm mới sản phẩm</span>
+        </div>
+
+        <div class="mt-3">
+            <form th:action="@{/admin/chatlieu/them-moi}" th:object="${sanPham}" method="post">
+                <div class="card">
+                    <div class="card-header">
+                        Thông tin sản phẩm
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <div class="mb-3">
+                                            <label for="ten" class="form-label">Tên</label>
+                                            <input id="ten" th:field="*{ten}" required class="form-control" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="mb-3">
+                                            <label for="danhMuc" class="form-label">Danh mục</label>
+                                            <select id="danhMuc" class="form-control form-select">
+                                                <option value="-1" disabled>Chọn danh mục</option>
+                                                <option th:each="danhMuc : ${listDanhMuc}" th:value="${danhMuc.getId()}" th:text="${danhMuc.getTen()}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="mb-3">
+                                            <label for="thuongHieu" class="form-label">Thương hiệu</label>
+                                            <select id="thuongHieu" class="form-control form-select">
+                                                <option value="-1" disabled>Chọn thương hiệu</option>
+                                                <option th:each="thuongHieu : ${listThuongHieu}" th:value="${thuongHieu.getId()}" th:text="${thuongHieu.getTen()}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="mb-3">
+                                        <label for="moTa" class="form-label">Mô tả</label>
+                                        <textarea id="moTa" th:field="*{moTa}" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Ảnh</label>
+
+                                    <div class="d-flex justify-content-center">
+                                        <div class="upload-container" onclick="document.getElementById('anhSanPham').click()">
+                                            <img id="anhSanPhamXemTruoc" src="#" alt="Ảnh xem trước">
+                                            <span id="iconUpload" class="fs-1 text-secondary">＋</span>
+                                            <button id="btnSuaAnh" class="btn btn-warning btn-sm edit-btn">Sửa</button>
+                                        </div>
+                                        <input type="file" id="anhSanPham" accept="image/*" class="d-none" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        Loại sản phẩm
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            <div id="loaiSanPhamContainer">
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="themLoaiSanPham()">
+                                    <i class="fa-solid fa-plus"></i> Thêm mới
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script th:inline="javascript">
+                    var listDanhMuc = /*[[${listDanhMuc}]]*/ [];
+                    var listThuongHieu = /*[[${listThuongHieu}]]*/ [];
+                    var listMauSac = /*[[${listMauSac}]]*/ [];
+                    var listKichCo = /*[[${listKichCo}]]*/ [];
+                    var listChatLieu = /*[[${listChatLieu}]]*/ [];
+                </script>
+                <script>
+                    function themLoaiSanPham() {
+                        let row = document.createElement("div");
+                        row.classList.add("row", "mb-3");
+
+                        let mauSacOptions = '<option value="-1" disabled selected>Chọn màu sắc</option>';
+                        listMauSac.forEach(dm => {
+                            mauSacOptions += `<option value="${dm.id}">${dm.ten}</option>`;
+                        });
+
+                        let kichCoOptions = '<option value="-1" disabled selected>Chọn kích cỡ</option>';
+                        listKichCo.forEach(th => {
+                            kichCoOptions += `<option value="${th.id}">${th.ten}</option>`;
+                        });
+
+                        let chatLieuOptions = '<option value="-1" disabled selected>Chọn chất liệu</option>';
+                        listChatLieu.forEach(th => {
+                            chatLieuOptions += `<option value="${th.id}">${th.ten}</option>`;
+                        });
+
+                        row.innerHTML = `
+                            <div class="col-2">
+                                <select class="form-control">${mauSacOptions}</select>
+                            </div>
+                            <div class="col-2">
+                                <select class="form-control">${kichCoOptions}</select>
+                            </div>
+                            <div class="col-2">
+                                <select class="form-control">${chatLieuOptions}</select>
+                            </div>
+                            <div class="col-2">
+                                <input type="number" class="form-control" placeholder="Giá gốc">
+                            </div>
+                            <div class="col-2">
+                                <input type="number" class="form-control" placeholder="Giá giảm">
+                            </div>
+                            <div class="col-2">
+                                <input type="number" class="form-control" placeholder="Số lượng">
+                            </div>
+<!--                            <div class="col-2 d-flex align-items-center">-->
+<!--                                <button type="button" class="btn btn-danger btn-sm" onclick="xoaLoaiSanPham(this)">Xóa</button>-->
+<!--                            </div>-->
+                        `;
+
+                        document.getElementById("loaiSanPhamContainer").appendChild(row);
+                    }
+
+                    function xoaLoaiSanPham(button) {
+                        button.parentElement.parentElement.remove();
+                    }
+                </script>
+
+
+                <button type="submit" class="btn btn-primary mt-3">Thêm mới</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
