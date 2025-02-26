@@ -15,6 +15,9 @@ import com.project.datn.repository.PhuongThucThanhToanRepository;
 import com.project.datn.repository.TaiKhoanRepository;
 import com.project.datn.service.banhang.IHoaDonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -89,7 +92,8 @@ public class HoaDonServiceImpl implements IHoaDonService {
         HoaDon hoaDon = optionalHoaDon.get();
 
         Optional<PhuongThucThanhToan> optionalPhuongThuc = phuongThucThanhToanRepository.findById(hoaDonRequest.getIdPhuongThucThanhToan());
-        List<HoaDonChiTiet> hoaDonChiTiets = hoaDonChiTietRepository.findByHoaDonId(idHoaDon);
+        Pageable pageableGioHang = PageRequest.of(0, 5);
+        Page<HoaDonChiTiet> hoaDonChiTiets = hoaDonChiTietRepository.findByHoaDonId(idHoaDon,pageableGioHang);
         Optional<MaGiamGia> optionalMaGiamGia = Optional.empty(); // Mặc định là rỗng
         if (hoaDon.getMaGiamGia() != null) {
             optionalMaGiamGia = maGiamGiaRepository.findById(hoaDon.getMaGiamGia().getId());

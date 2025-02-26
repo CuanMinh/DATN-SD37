@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- Không cần include lại CSS/JS, vì đã có trong layout hoặc file chính -->
+</head>
+<body>
+
+<!-- Modal thông tin khách hàng cũ -->
+<div th:fragment="oldCustomerModal" class="modal fade" id="oldCustomerModal" tabindex="-1" aria-labelledby="oldCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Thêm lớp modal-lg để tăng kích thước modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="oldCustomerModalLabel">Khách hàng cũ</h5>
+            </div>
+            <div th:fragment="modalContent" class="modal-body" id="modal-content-khachhang">
+                <!-- Hidden input chứa maHoaDon -->
+                <input type="hidden" id="maHoaDonHidden" th:value="${selectedHoaDon != null ? selectedHoaDon.maHoaDon : ''}"/>
+                <!-- Thanh tìm kiếm theo tên và số điện thoại -->
+                <div class="input-group input-group-sm mb-3" style="max-width: 300px;">
+                    <input type="text" class="form-control form-control-sm" id="searchDiaChi" placeholder="Nhập tên hoặc số điện thoại" aria-label="Tìm kiếm theo tên hoặc số điện thoại" aria-describedby="button-addon">
+                    <button class="btn btn-primary btn-sm" type="button" id="button-addon" onclick="searchDiaChi()">Tìm kiếm</button>
+                </div>
+                <!-- Mục thông tin khách hàng cũ -->
+                <div th:if="${listDiaChi != null and not #lists.isEmpty(listDiaChi.content)}">
+                <table class="table table-bordered mt-3">
+                    <thead>
+                    <tr class="text-center">
+                        <th>STT</th>
+                        <th>Tên</th>
+                        <th>Số điện thoại</th>
+                        <th>Thành phố</th>
+                        <th>Quận/Huyện</th>
+                        <th>Phường/Xã</th>
+                        <th>Chức năng</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="itemD, iterStat : ${listDiaChi.content}">
+                        <td th:text="${iterStat.index + 1 + (listDiaChi.number * listDiaChi.size)}">1</td>
+                        <td th:text="${itemD.ten}"></td>
+                        <td th:text="${itemD.soDienThoai}"></td>
+                        <td th:text="${itemD.thanhPho}"></td>
+                        <td th:text="${itemD.quanHuyen}"></td>
+                        <td th:text="${itemD.phuongXa}"></td>
+                        <td class="text-center">
+                            <form th:action="@{/admin/banhang/addthongtinkhachhangcu}" method="post">
+                                <input type="hidden" name="idhoadon" th:value="${selectedHoaDon != null ? selectedHoaDon.id : ''}"/>
+                                <input type="hidden" name="idDiachi" th:value="${itemD.id}"/>
+                                <button type="submit" class="btn btn-primary">Thêm</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div th:unless="${listDiaChi != null and not #lists.isEmpty(listDiaChi.content)}" class="alert alert-warning text-center">
+                    Không có khách hàng nào
+                </div>
+                <!-- Phân trang cho modal -->
+                <nav th:if="${listDiaChi != null and listDiaChi.totalPages >= 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${listDiaChi.first} ? 'disabled'">
+                            <a class="page-link" href="#" th:onclick="'loadCustomerModal(0)'"><<</a>
+                        </li>
+                        <li class="page-item" th:classappend="${listDiaChi.first} ? 'disabled'">
+                            <a class="page-link" href="#" th:onclick="'loadCustomerModal(' + ${listDiaChi.number - 1} + ')'"><</a>
+                        </li>
+                        <!-- Hiển thị các trang gần trang hiện tại (3 trang: 1 trước, hiện tại, 1 sau) -->
+                        <th:block th:each="i : ${#numbers.sequence(0, listDiaChi.totalPages - 1)}">
+                            <th:block th:if="${i >= listDiaChi.number - 1 and i <= listDiaChi.number + 1 and i < listDiaChi.totalPages}">
+                                <li class="page-item" th:classappend="${i == listDiaChi.number} ? 'active'">
+                                    <a class="page-link" href="#" th:onclick="'loadCustomerModal(' + ${i} + ')'" th:text="${i + 1}"></a>
+                                </li>
+                            </th:block>
+                        </th:block>
+
+                        <!-- Hiển thị dấu "..." nếu có nhiều trang hơn -->
+                        <th:block th:if="${listDiaChi.totalPages > 3}">
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" th:onclick="'loadCustomerModal(' + (${listDiaChi.totalPages - 1}) + ')'" th:text="${listDiaChi.totalPages}"></a>
+                            </li>
+                        </th:block>
+                        <li class="page-item" th:classappend="${listDiaChi.last} ? 'disabled'">
+                            <a class="page-link" href="#" th:onclick="'loadCustomerModal(' + ${listDiaChi.number + 1} + ')'">></a>
+                        </li>
+                        <li class="page-item" th:classappend="${listDiaChi.last} ? 'disabled'">
+                            <a class="page-link" href="#" th:onclick="'loadCustomerModal(' + ${listDiaChi.totalPages - 1} + ')'">>></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

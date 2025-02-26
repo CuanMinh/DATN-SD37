@@ -10,7 +10,317 @@
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
+    <!--jquery-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!--khoá đóng modal phần sản phẩm-->
+    <script>
+        var $j = jQuery.noConflict();
+        console.log("jQuery loaded:", typeof $j !== 'undefined' ? "Yes" : "No");
+        console.log("$j.ajax exists:", typeof $j.ajax !== 'undefined' ? "Yes" : "No");
 
+        // Biến toàn cục để lưu từ khóa tìm kiếm khách hàng cũ
+        let searchQuery = '';
+
+        // Biến toàn cục để lưu từ khóa tìm kiếm
+        let searchQueryGiamGia = '';
+
+        function loadModalContent(page) {
+            console.log("Đã gọi loadModalContent với page:", page);
+            var maHoaDon = document.getElementById('maHoaDonHidden').value || $j('#exampleModal').data('mahoadon');
+            console.log("Đã gọi loadModalContent với page:", page, "maHoaDon:", maHoaDon);
+            console.log("Modal is open:", $j("#exampleModal").hasClass("show"));
+            $j.ajax({
+                url: '/admin/banhang/sanpham-modal',
+                type: 'GET',
+                data: {
+                    maHoaDon: maHoaDon,
+                    pageSanPham: page
+                },
+                beforeSend: function() {
+                    if (!$j("#exampleModal").hasClass("show")) {
+                        $j("#exampleModal").modal("show");
+                    }
+                },
+                success: function (data) {
+                    console.log("Ajax success, data:", data);
+                    $j('#modal-content').html(data);
+                    $j("#exampleModal").modal("show"); // Giữ modal mở
+                    console.log("Modal after show:", $j("#exampleModal").hasClass("show"));
+                },
+                error: function (xhr, status, error) {
+                    console.error("Ajax error:", status, error);
+                    alert('Có lỗi xảy ra khi tải dữ liệu.');
+                }
+            });
+        }
+        $j(document).ready(function () {
+            $j("#exampleModal").modal("show"); // Mở modal ngay khi trang tải
+        });
+
+        // Phân trang mã giảm giá
+        function loadGiamGiaModal(page) {
+            console.log("Đã gọi loadGiamGiaModal với page:", page);
+            var maHoaDon = document.getElementById('maHoaDonHidden').value || $j('#discountModal').data('mahoadon') || localStorage.getItem('maHoaDon');
+            console.log("Đã gọi loadGiamGiaModal với page:", page, "maHoaDon:", maHoaDon);
+            console.log("Modal is open:", $j("#discountModal").hasClass("show"));
+            if (!maHoaDon) {
+                console.error("maHoaDon không hợp lệ!");
+                alert("Mã hóa đơn không tồn tại, vui lòng kiểm tra lại.");
+                return;
+            }
+            $j.ajax({
+                url: '/admin/banhang/giamgia-modal/search', // Sử dụng endpoint tìm kiếm để giữ kết quả
+                type: 'GET',
+                data: {
+                    maHoaDon: maHoaDon,
+                    ten: searchQueryGiamGia, // Sử dụng từ khóa tìm kiếm đã lưu
+                    pageGiamGia: page
+                },
+                beforeSend: function() {
+                    if (!$j("#discountModal").hasClass("show")) {
+                        $j('.modal-backdrop').remove();
+                        document.body.classList.remove('modal-open');
+                        $j("#discountModal").modal("show");
+                    }
+                },
+                success: function(data) {
+                    console.log("Ajax success, data:", data);
+                    $j('#modal-content-giamgia').html(data); // Sử dụng id riêng
+                    $j("#discountModal").modal("show"); // Giữ modal mở
+                    console.log("Modal after show:", $j("#discountModal").hasClass("show"));
+                    // Buộc render lại DOM
+                    $j('#modal-content-giamgia').trigger('domUpdated');
+                    console.log("DOM after update and trigger (giamgia):", $j('#modal-content-giamgia').html());
+                },
+                error: function(xhr, status, error) {
+                    console.error("Ajax error:", status, error);
+                    alert('Có lỗi xảy ra khi tải dữ liệu.');
+                }
+            });
+        }
+
+        // Phân trang khách hàng cũ
+        function loadCustomerModal(page) {
+            console.log("Đã gọi loadCustomerModal với page:", page, "type:", typeof page);
+            var maHoaDon = document.getElementById('maHoaDonHidden').value || $j('#oldCustomerModal').data('mahoadon') || localStorage.getItem('maHoaDon');
+            console.log("maHoaDon from maHoaDonHidden or modal data or localStorage:", maHoaDon);
+            if (!maHoaDon) {
+                console.error("maHoaDon không hợp lệ!");
+                alert("Mã hóa đơn không tồn tại, vui lòng kiểm tra lại.");
+                return;
+            }
+            $j.ajax({
+                url: '/admin/banhang/khachhangmodal/search', // Sử dụng endpoint tìm kiếm để giữ kết quả
+                type: 'GET',
+                data: {
+                    maHoaDon: maHoaDon,
+                    query: searchQuery, // Sử dụng từ khóa tìm kiếm đã lưu
+                    pageKhachHang: page
+                },
+                beforeSend: function() {
+                    console.log("Before send, pageKhachHang:", page);
+                    var modalEl = document.getElementById('oldCustomerModal');
+                    if (!modalEl) {
+                        console.error("Không tìm thấy modal 'oldCustomerModal' trong DOM!");
+                        return;
+                    }
+                    $j('.modal-backdrop').remove();
+                    document.body.classList.remove('modal-open');
+                    var modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+                    modal.show();
+                    console.log("Modal before send, class:", $j("#oldCustomerModal").hasClass("show"));
+                },
+                success: function(data) {
+                    console.log("Ajax thành công, page sent:", page, "data:", data);
+                    $j('#modal-content-khachhang').html(data); // Sử dụng id riêng
+                    var modalEl = document.getElementById('oldCustomerModal');
+                    if (modalEl) {
+                        var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl, { backdrop: 'static' });
+                        modal.show();
+                        console.log("Modal shown, class:", $j("#oldCustomerModal").hasClass("show"));
+                        // Buộc render lại DOM
+                        $j('#modal-content-khachhang').trigger('domUpdated');
+                        console.log("DOM after update and trigger (khachhang):", $j('#modal-content-khachhang').html());
+                    } else {
+                        console.error("Modal element not found after AJAX!");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Ajax lỗi, page sent:", page, "status:", status, error);
+                    alert('Có lỗi xảy ra khi tải dữ liệu.');
+                }
+            });
+        }
+
+        // Tìm kiếm mã giảm giá theo tên
+        function searchGiamGia() {
+            var maHoaDon = document.getElementById('maHoaDonHidden').value || $j('#discountModal').data('mahoadon') || localStorage.getItem('maHoaDon');
+            var searchTerm = $j('#searchGiamGia').val().trim();
+            console.log("Searching with maHoaDon:", maHoaDon, "searchTerm:", searchTerm);
+            if (!maHoaDon) {
+                console.error("maHoaDon không hợp lệ!");
+                alert("Mã hóa đơn không tồn tại, vui lòng kiểm tra lại.");
+                return;
+            }
+            searchQueryGiamGia = searchTerm; // Lưu từ khóa tìm kiếm vào biến toàn cục
+            $j.ajax({
+                url: '/admin/banhang/giamgia-modal/search',
+                type: 'GET',
+                data: {
+                    maHoaDon: maHoaDon,
+                    ten: searchTerm, // Gửi từ khóa tìm kiếm (tên mã giảm giá)
+                    pageGiamGia: 0 // Bắt đầu từ trang 0
+                },
+                beforeSend: function() {
+                    if (!$j("#discountModal").hasClass("show")) {
+                        $j('.modal-backdrop').remove();
+                        document.body.classList.remove('modal-open');
+                        $j("#discountModal").modal("show");
+                    }
+                },
+                success: function(data) {
+                    console.log("Search success, data:", data);
+                    $j('#modal-content-giamgia').html(data); // Cập nhật nội dung modal
+                    $j("#discountModal").modal("show"); // Giữ modal mở
+                    console.log("Modal after show:", $j("#discountModal").hasClass("show"));
+                    // Buộc render lại DOM
+                    $j('#modal-content-giamgia').trigger('domUpdated');
+                    console.log("DOM after search and trigger:", $j('#modal-content-giamgia').html());
+                },
+                error: function(xhr, status, error) {
+                    console.error("Search error:", status, error);
+                    alert('Có lỗi xảy ra khi tìm kiếm dữ liệu.');
+                }
+            });
+        }
+        // Tìm kiếm địa chỉ khách hàng cũ theo tên hoặc số điện thoại
+        function searchDiaChi() {
+            var maHoaDon = document.getElementById('maHoaDonHidden').value || $j('#oldCustomerModal').data('mahoadon') || localStorage.getItem('maHoaDon');
+            var searchTerm = $j('#searchDiaChi').val().trim();
+            console.log("Searching with maHoaDon:", maHoaDon, "searchTerm:", searchTerm);
+            if (!maHoaDon) {
+                console.error("maHoaDon không hợp lệ!");
+                alert("Mã hóa đơn không tồn tại, vui lòng kiểm tra lại.");
+                return;
+            }
+            searchQuery = searchTerm; // Lưu từ khóa tìm kiếm vào biến toàn cục
+            $j.ajax({
+                url: '/admin/banhang/khachhangmodal/search',
+                type: 'GET',
+                data: {
+                    maHoaDon: maHoaDon,
+                    query: searchTerm, // Gửi từ khóa tìm kiếm
+                    pageKhachHang: 0 // Bắt đầu từ trang 0
+                },
+                beforeSend: function() {
+                    console.log("Before search, pageKhachHang:", 0);
+                    var modalEl = document.getElementById('oldCustomerModal');
+                    if (!modalEl) {
+                        console.error("Không tìm thấy modal 'oldCustomerModal' trong DOM!");
+                        return;
+                    }
+                    $j('.modal-backdrop').remove();
+                    document.body.classList.remove('modal-open');
+                    var modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+                    modal.show();
+                    console.log("Modal before search, class:", $j("#oldCustomerModal").hasClass("show"));
+                },
+                success: function(data) {
+                    console.log("Search success, data:", data);
+                    $j('#modal-content-khachhang').html(data); // Cập nhật nội dung modal
+                    var modalEl = document.getElementById('oldCustomerModal');
+                    if (modalEl) {
+                        var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl, { backdrop: 'static' });
+                        modal.show();
+                        console.log("Modal after search, class:", $j("#oldCustomerModal").hasClass("show"));
+                        // Buộc render lại DOM
+                        $j('#modal-content-khachhang').trigger('domUpdated');
+                        console.log("DOM after search and trigger (khachhang):", $j('#modal-content-khachhang').html());
+                    } else {
+                        console.error("Modal element not found after AJAX!");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Search error:", status, error);
+                    alert('Có lỗi xảy ra khi tìm kiếm dữ liệu.');
+                }
+            });
+        }
+
+        // Mở modal khi nhấn nút
+        $j(document).ready(function() {
+            $j('.btn-primary[data-bs-target="#discountModal"]').on('click', function() {
+                var maHoaDon = document.getElementById('maHoaDonHidden').value;
+                if (maHoaDon) {
+                    $j('#discountModal').data('mahoadon', maHoaDon);
+                    localStorage.setItem('maHoaDon', maHoaDon);
+                }
+                $j('.modal-backdrop').remove();
+                document.body.classList.remove('modal-open');
+                $j("#discountModal").modal("show");
+            });
+
+            $j('.btn-primary[data-bs-target="#exampleModal"]').on('click', function() {
+                var maHoaDon = document.getElementById('maHoaDonHidden').value;
+                if (maHoaDon) {
+                    $j('#exampleModal').data('mahoadon', maHoaDon);
+                    localStorage.setItem('maHoaDon', maHoaDon);
+                }
+                $j('.modal-backdrop').remove();
+                document.body.classList.remove('modal-open');
+                $j("#exampleModal").modal("show");
+            });
+
+            $j('#btnOldCustomer').on('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                var maHoaDon = document.getElementById('maHoaDonHidden').value;
+                if (maHoaDon) {
+                    $j('#oldCustomerModal').data('mahoadon', maHoaDon);
+                    localStorage.setItem('maHoaDon', maHoaDon);
+                }
+                var oldCustomerModalEl = document.getElementById('oldCustomerModal');
+                if (!oldCustomerModalEl) {
+                    console.error("Không tìm thấy modal 'oldCustomerModal' trong DOM!");
+                    alert("Có lỗi xảy ra khi mở modal khách hàng cũ. Vui lòng kiểm tra lại layout hoặc fragment.");
+                    return;
+                }
+                $j('.modal-backdrop').remove();
+                document.body.classList.remove('modal-open');
+                var oldCustomerModal = new bootstrap.Modal(oldCustomerModalEl, {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                oldCustomerModal.show();
+                console.log("Modal 'oldCustomerModal' đã được mở, class:", $j("#oldCustomerModal").hasClass("show"));
+                console.log("Modal backdrop class:", document.querySelector('.modal-backdrop') ? 'Exists' : 'Not found');
+            });
+        });
+        // Xử lý backdrop và trạng thái modal
+        $j(document).ready(function() {
+            var maHoaDon = document.getElementById('maHoaDonHidden').value;
+            if (maHoaDon) {
+                localStorage.setItem('maHoaDon', maHoaDon);
+                $j('#discountModal').data('mahoadon', maHoaDon);
+                $j('#exampleModal').data('mahoadon', maHoaDon);
+                $j('#oldCustomerModal').data('mahoadon', maHoaDon);
+            }
+
+            $j('.modal').on('hidden.bs.modal', function(e) {
+                console.log("Modal closed, removing backdrop:", $j(this).attr('id'));
+                $j('.modal-backdrop').remove(); // Xóa tất cả backdrop
+                document.body.classList.remove('modal-open'); // Xóa lớp modal-open khỏi <body>
+                // Reset maHoaDon
+                var maHoaDon = localStorage.getItem('maHoaDon');
+                if (maHoaDon) {
+                    document.getElementById('maHoaDonHidden').value = maHoaDon;
+                    $j('#discountModal').data('mahoadon', maHoaDon);
+                    $j('#exampleModal').data('mahoadon', maHoaDon);
+                    $j('#oldCustomerModal').data('mahoadon', maHoaDon);
+                }
+            });
+        });
+    </script>
 </head>
 <body>
 <!--  code all  -->
@@ -67,19 +377,22 @@
                     <div class="col-8">
                         <h3> Giỏ Hàng </h3>
                         <div class="col-auto">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#exampleModal">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                 Thêm sản phẩm vào giỏ hàng
                             </button>
+                            <div th:replace="admin/banhang/modalsanpham :: exampleModal"></div>
                         </div>
                         <!--                        list sản phầm muốn mua -->
                         <div>
-                            <div th:if="${#lists.isEmpty(listHoaDonChiTiet)}" class="alert alert-warning text-center">
+                            <div th:if="${#lists.isEmpty(listHoaDonChiTiet.content)}"
+                                 class="alert alert-warning text-center">
                                 Chưa có sản phẩm nào trong giỏ hàng
                             </div>
-                            <table th:if="${not #lists.isEmpty(listHoaDonChiTiet)}" class="table table-bordered mt-3">
+                            <table th:if="${not #lists.isEmpty(listHoaDonChiTiet.content)}"
+                                   class="table table-bordered mt-3">
                                 <!--                                           th:unless="${productsdetail.totalElements==0}">-->
                                 <thead>
+                                <!--                                <p th:text="'Total Pages: ' + ${listHoaDonChiTiet.totalPages}"></p>-->
                                 <tr class="text-center">
                                     <th>STT</th>
                                     <th>Hình ảnh</th>
@@ -94,8 +407,10 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr th:each="item2,iterStat : ${listHoaDonChiTiet}">
-                                    <td th:text="${iterStat.index + 1}">1</td>
+                                <tr th:each="item2,iterStat : ${listHoaDonChiTiet.content}">
+                                    <td th:text="${iterStat.index + 1 + (listHoaDonChiTiet.number * listHoaDonChiTiet.size)}">
+                                        1
+                                    </td>
                                     <!--                                    <td class="text-center"><img-->
                                     <!--                                            th:src="@{'/getproduct/'+${item2.productDetail.product.Image}}" width="100px"-->
                                     <!--                                            class="img-fluid" alt="Hình ảnh sản phẩm"></td>-->
@@ -131,78 +446,141 @@
                                 </tr>
                                 </tbody>
                             </table>
+                            <!-- Phân trang -->
+                            <nav th:if="${listHoaDonChiTiet.totalPages >= 1}">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item" th:classappend="${listHoaDonChiTiet.first} ? 'disabled'">
+                                        <a class="page-link"
+                                           th:href="@{/admin/banhang/addgiohanghoadon(maHoaDon=${selectedHoaDon.maHoaDon}, page=0)}"><<</a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${listHoaDonChiTiet.first} ? 'disabled'">
+                                        <a class="page-link"
+                                           th:href="@{/admin/banhang/addgiohanghoadon(maHoaDon=${selectedHoaDon.maHoaDon}, page=${listHoaDonChiTiet.number - 1})}"><</a>
+                                    </li>
+                                    <!-- Hiển thị các trang gần trang hiện tại (3 trang: 1 trước, hiện tại, 1 sau) -->
+                                    <th:block th:each="i : ${#numbers.sequence(0, listHoaDonChiTiet.totalPages - 1)}">
+                                        <th:block th:if="${i >= listHoaDonChiTiet.number - 1 and i <= listHoaDonChiTiet.number + 1 and i < listHoaDonChiTiet.totalPages}">
+                                            <li class="page-item" th:classappend="${i == listHoaDonChiTiet.number} ? 'active'">
+                                                <a class="page-link" th:href="@{/admin/banhang/addgiohanghoadon(maHoaDon=${selectedHoaDon.maHoaDon}, page=${i})}" th:text="${i + 1}"></a>
+                                            </li>
+                                        </th:block>
+                                    </th:block>
+
+                                    <!-- Hiển thị dấu "..." nếu có nhiều trang hơn -->
+                                    <th:block th:if="${listHoaDonChiTiet.totalPages > 3}">
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" th:href="@{/admin/banhang/addgiohanghoadon(maHoaDon=${selectedHoaDon.maHoaDon}, page=${listHoaDonChiTiet.totalPages - 1})}" th:text="${listHoaDonChiTiet.totalPages}"></a>
+                                        </li>
+                                    </th:block>
+                                    <li class="page-item" th:classappend="${listHoaDonChiTiet.last} ? 'disabled'">
+                                        <a class="page-link"
+                                           th:href="@{/admin/banhang/addgiohanghoadon(maHoaDon=${selectedHoaDon.maHoaDon}, page=${listHoaDonChiTiet.number + 1})}">></a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${listHoaDonChiTiet.last} ? 'disabled'">
+                                        <a class="page-link"
+                                           th:href="@{/admin/banhang/addgiohanghoadon(maHoaDon=${selectedHoaDon.maHoaDon}, page=${listHoaDonChiTiet.totalPages - 1})}">>></a>
+                                    </li>
+                                </ul>
+                            </nav>
+                            <!-- end phân trang -->
                         </div>
                         <!--                        end list sản phầm muốn mua -->
                     </div>
-                    <!-- modal danh sách sản phẩm để thêm vào giỏ hàng-->
-                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                         aria-hidden="true">
-                        <div class="modal-dialog modal-xl" style="width: 100%; max-height: 100%;">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Thêm Sản phẩm muốn mua</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>tìm kiếm</p>
-                                    <!--mục sản phâmr-->
-                                    <table class="table table-bordered mt-3">
-                                        <!--                                           th:unless="${productsdetail.totalElements==0}">-->
-                                        <thead>
-                                        <tr class="text-center">
-                                            <th>STT</th>
-                                            <th>Hình ảnh</th>
-                                            <th>thông tin</th>
-                                            <th>màu</th>
-                                            <th>kích cỡ</th>
-                                            <th>Đơn giá</th>
-                                            <th>số lượng</th>
-                                            <!--                                            <th>id bill</th>-->
-                                            <!--                                            <th>id product</th>-->
-                                            <th>Chức năng</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr th:each="item,iterStat : ${chitietsanpham}">
-                                            <td th:text="${iterStat.index + 1}">1</td>
-                                            <!--                                            <td class="text-center"><img-->
-                                            <!--                                                    th:src="@{'/getproduct/'+${item.product.image}}" width="100px"-->
-                                            <!--                                                    class="img-fluid" alt="Hình ảnh sản phẩm"></td>-->
-                                            <td> hình ảnh sp</td>
-                                            <td class="text-center">
-                                                <span th:text="${item.sanPham.ten}"></span><br>
-                                                <span th:text="${item.sanPham.ngayTao}"></span>
-                                            </td>
-                                            <td th:text="${item.mauSac.ten}"></td>
-                                            <td th:text="${item.kichCo.ten}"></td>
-                                            <td class="text-center" th:text="${item.gia}+'VND'"></td>
-                                            <td th:text="${item.soLuong}"></td>
-                                            <!--                                            <td th:text="${selectedHoaDon.id}"></td>-->
-                                            <!--                                            <td th:text="${item.id}"></td>-->
-                                            <td>
-                                                <a
-                                                        th:data-idchitietsanpham="${item.id}"
-                                                        th:data-idhoadon="${selectedHoaDon.id}"
-                                                        th:data-ten="${item.sanPham.ten}"
-                                                        th:data-mahoadon="${selectedHoaDon.maHoaDon}"
-                                                        style="cursor: pointer; color: #007bff;"
-                                                        onclick="showConfigModalDialog(this.getAttribute('data-idchitietsanpham'), this.getAttribute('data-idhoadon'), this.getAttribute('data-ten'), this.getAttribute('data-mahoadon'))">
-                                                    <span>Mua</span>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!--  end danh sách sản phẩm để thêm vào giỏ hàng-->
+
+<!--                    &lt;!&ndash; Modal danh sách sản phẩm để thêm vào giỏ hàng &ndash;&gt;-->
+<!--                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"-->
+<!--                         aria-hidden="true" th:fragment="exampleModal">-->
+<!--                        <div class="modal-dialog modal-xl" style="width: 100%; max-height: 100%;">-->
+<!--                            <div class="modal-content">-->
+<!--                                <div class="modal-header">-->
+<!--                                    <h5 class="modal-title">Thêm Sản phẩm muốn mua</h5>-->
+<!--                                    <button type="button" class="btn-close" data-bs-dismiss="modal"-->
+<!--                                            aria-label="Close"></button>-->
+<!--                                </div>-->
+<!--                                <div class="modal-body" id="modal-content">-->
+<!--                                    &lt;!&ndash; Thêm hidden input chứa maHoaDon &ndash;&gt;-->
+<!--                                    <input type="hidden" id="maHoaDonHidden" th:value="${selectedHoaDon.maHoaDon}"/>-->
+<!--                                    <p>Tìm kiếm</p>-->
+<!--                                    <table class="table table-bordered mt-3">-->
+<!--                                        <thead>-->
+<!--                                        <tr class="text-center">-->
+<!--                                            <th>STT</th>-->
+<!--                                            <th>Hình ảnh</th>-->
+<!--                                            <th>Thông tin</th>-->
+<!--                                            <th>Màu</th>-->
+<!--                                            <th>Kích cỡ</th>-->
+<!--                                            <th>Đơn giá</th>-->
+<!--                                            <th>Số lượng</th>-->
+<!--                                            <th>Chức năng</th>-->
+<!--                                        </tr>-->
+<!--                                        </thead>-->
+<!--                                        <tbody>-->
+<!--                                        <tr th:each="item,iterStat : ${chitietsanpham.content}">-->
+<!--                                            <td th:text="${iterStat.index + 1 + (chitietsanpham.number * chitietsanpham.size)}">-->
+<!--                                                1-->
+<!--                                            </td>-->
+<!--                                            <td>Hình ảnh sp</td>-->
+<!--                                            <td class="text-center">-->
+<!--                                                <span th:text="${item.sanPham.ten}"></span><br>-->
+<!--                                                <span th:text="${item.sanPham.ngayTao}"></span>-->
+<!--                                            </td>-->
+<!--                                            <td th:text="${item.mauSac.ten}"></td>-->
+<!--                                            <td th:text="${item.kichCo.ten}"></td>-->
+<!--                                            <td class="text-center" th:text="${item.gia} + ' VND'"></td>-->
+<!--                                            <td th:text="${item.soLuong}"></td>-->
+<!--                                            <td>-->
+<!--                                                <a th:data-idchitietsanpham="${item.id}"-->
+<!--                                                   th:data-idhoadon="${selectedHoaDon.id}"-->
+<!--                                                   th:data-ten="${item.sanPham.ten}"-->
+<!--                                                   th:data-mahoadon="${selectedHoaDon.maHoaDon}"-->
+<!--                                                   style="cursor: pointer; color: #007bff;"-->
+<!--                                                   onclick="showConfigModalDialog(this.getAttribute('data-idchitietsanpham'), this.getAttribute('data-idhoadon'), this.getAttribute('data-ten'), this.getAttribute('data-mahoadon'))">-->
+<!--                                                    <span>Mua</span>-->
+<!--                                                </a>-->
+<!--                                            </td>-->
+<!--                                        </tr>-->
+<!--                                        </tbody>-->
+<!--                                    </table>-->
+<!--                                    &lt;!&ndash; Phân trang sản phẩm trong modal &ndash;&gt;-->
+<!--                                    &lt;!&ndash; Phân trang sản phẩm trong modal &ndash;&gt;-->
+<!--                                    <nav th:if="${chitietsanpham.totalPages >= 1}">-->
+<!--                                        <ul class="pagination justify-content-center">-->
+<!--                                            <li class="page-item" th:classappend="${chitietsanpham.first} ? 'disabled'">-->
+<!--                                                <a class="page-link" href="#" th:onclick="'loadModalContent(0)'">Đầu</a>-->
+<!--                                            </li>-->
+<!--                                            <li class="page-item" th:classappend="${chitietsanpham.first} ? 'disabled'">-->
+<!--                                                <a class="page-link" href="#"-->
+<!--                                                   th:onclick="'loadModalContent(' + ${chitietsanpham.number - 1} + ')'">Trước</a>-->
+<!--                                            </li>-->
+<!--                                            <li class="page-item"-->
+<!--                                                th:each="i : ${#numbers.sequence(0, chitietsanpham.totalPages - 1)}"-->
+<!--                                                th:classappend="${i == chitietsanpham.number} ? 'active'">-->
+<!--                                                <a class="page-link" href="#"-->
+<!--                                                   th:onclick="'loadModalContent(' + ${i} + ')'" th:text="${i + 1}"></a>-->
+<!--                                            </li>-->
+<!--                                            <li class="page-item" th:classappend="${chitietsanpham.last} ? 'disabled'">-->
+<!--                                                <a class="page-link" href="#"-->
+<!--                                                   th:onclick="'loadModalContent(' + ${chitietsanpham.number + 1} + ')'">Sau</a>-->
+<!--                                            </li>-->
+<!--                                            <li class="page-item" th:classappend="${chitietsanpham.last} ? 'disabled'">-->
+<!--                                                <a class="page-link" href="#"-->
+<!--                                                   th:onclick="'loadModalContent(' + ${chitietsanpham.totalPages - 1} + ')'">Cuối</a>-->
+<!--                                            </li>-->
+<!--                                        </ul>-->
+<!--                                    </nav>-->
+<!--                                    &lt;!&ndash; end phân trang sản phẩm &ndash;&gt;-->
+<!--                                </div>-->
+<!--                                <div class="modal-footer">-->
+<!--                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng-->
+<!--                                    </button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    &lt;!&ndash;  end danh sách sản phẩm để thêm vào giỏ hàng&ndash;&gt;-->
 
                     <!--  modal chọn số Lượng-->
                     <script>
@@ -264,14 +642,15 @@
                                 <div class="d-flex align-items-center mt-3">
                                     <p class="mb-0 me-2">Thông tin khách hàng</p>
                                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                            data-bs-target="#khachhangmoiModal">+</button>
+                                            data-bs-target="#khachhangmoiModal">+
+                                    </button>
                                 </div>
-                                <!-- Hiển thị khi chưa áp dụng mã giảm giá -->
+                                <!-- Hiển thị khi chưa có thông tin khách hàng -->
                                 <div th:if="${selectedHoaDon != null and selectedHoaDon.diaChi == null}"
                                      class="mt-2 text-muted">
                                     <p>Không có thông tin khách hàng</p>
                                 </div>
-                                <!-- Hiển thị mã giảm giá nếu đã áp dụng -->
+                                <!-- Hiển thị khi có thông tin khách hàng -->
                                 <div th:if="${selectedHoaDon != null and selectedHoaDon.diaChi != null}" class="mt-2">
                                     <div class="d-flex align-items-center">
                                         <div class="">
@@ -281,16 +660,19 @@
                                             </p>
                                             <p class="">
                                                 Số điện thoại:
-                                                <span th:text="${selectedHoaDon.diaChi.soDienThoai}" class="fw-bold"></span>
+                                                <span th:text="${selectedHoaDon.diaChi.soDienThoai}"
+                                                      class="fw-bold"></span>
                                             </p>
                                             <p class="">
                                                 Địa Chỉ:
-                                                <span th:text="${selectedHoaDon.diaChi.phuongXa + ' - ' + selectedHoaDon.diaChi.quanHuyen + ' - ' + selectedHoaDon.diaChi.thanhPho}" class="fw-bold"></span>
+                                                <span th:text="${selectedHoaDon.diaChi.phuongXa + ' - ' + selectedHoaDon.diaChi.quanHuyen + ' - ' + selectedHoaDon.diaChi.thanhPho}"
+                                                      class="fw-bold"></span>
                                             </p>
                                         </div>
                                     </div>
-                                    <a class="ms-2 text-danger text-decoration-none" th:href="@{'/admin/banhang/xoathongtinkhachhang/' + ${selectedHoaDon.id}}">
-                                        <span class="fa fa-trash fa-1x"></span>  xoá khách hàng
+                                    <a class="ms-2 text-danger text-decoration-none"
+                                       th:href="@{'/admin/banhang/xoathongtinkhachhang/' + ${selectedHoaDon.id}}">
+                                        <span class="fa fa-trash fa-1x"></span> xoá khách hàng
                                     </a>
                                 </div>
                                 <!-- End Thông tin khách hàng mua hàng -->
@@ -299,7 +681,8 @@
                                 <div class="d-flex align-items-center mt-3">
                                     <p class="mb-0 me-2">Mã giảm giá</p>
                                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                            data-bs-target="#discountModal">+</button>
+                                            data-bs-target="#discountModal">+
+                                    </button>
                                 </div>
                                 <!-- Hiển thị khi chưa áp dụng mã giảm giá -->
                                 <div th:if="${selectedHoaDon != null and selectedHoaDon.maGiamGia == null}"
@@ -344,7 +727,7 @@
                                     <label for="sotiengiamgia">Số tiền giảm giá</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control"
-                                               th:value="${selectedHoaDon.maGiamGia != null ? selectedHoaDon.maGiamGia.giaTriGiamGia : ''}"
+                                               th:value="${tiemGiamGia != null ? tiemGiamGia : ''}"
                                                id="sotiengiamgia" readonly>
                                         <div class="input-group-append">
                                             <span class="input-group-text">VND</span>
@@ -425,59 +808,64 @@
     </div>
 
     <!-- Modal giảm giá -->
-    <div class="modal fade" id="discountModal" tabindex="-1" aria-labelledby="discountModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl" style="width: 100%; max-height: 100%;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="discountModalLabel">Thêm mã giảm giá</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Mục giảm giá -->
-                    <table class="table table-bordered mt-3">
-                        <thead>
-                        <tr class="text-center">
-                            <th>STT</th>
-                            <th>Tên</th>
-                            <th>Loại Giảm giá</th>
-                            <th>Giá trị giảm giá</th>
-                            <th>Số lượng</th>
-                            <th>Chức năng</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="itemM, iterStat : ${listMaGiamGia}">
-                            <td th:text="${iterStat.index + 1}">1</td>
-                            <td th:text="${itemM.ten}"></td>
-                            <td th:text="${itemM.loaiGiamGia}"></td>
-                            <td class="text-center" th:text="${itemM.giaTriGiamGia} + ' VND'"></td>
-                            <td th:text="${itemM.soLuong}"></td>
-                            <td class="text-center">
-                                <!-- Form gửi POST đến controller /admin/banhang/addgimagia -->
-                                <form th:action="@{/admin/banhang/addgimagia}" method="post">
-                                    <!-- Giả sử selectedHoaDon là đối tượng hóa đơn đã được truyền vào model -->
-                                    <input type="hidden" name="idhoadon" th:value="${selectedHoaDon.id}"/>
-                                    <input type="hidden" name="idMaGiamGia" th:value="${itemM.id}"/>
-                                    <input type="hidden" name="maHoaDon" th:value="${selectedHoaDon.maHoaDon}"/>
-                                    <button type="submit" class="btn btn-primary">Áp Dụng</button>
-                                </form>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Đóng
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+<!--    <div class="modal fade" id="discountModal" tabindex="-1" aria-labelledby="discountModalLabel" aria-hidden="true">-->
+<!--        <div class="modal-dialog modal-xl" style="width: 100%; max-height: 100%;">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title" id="discountModalLabel">Thêm mã giảm giá</h5>-->
+<!--                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+<!--                </div>-->
+<!--                <div class="modal-body">-->
+<!--                    &lt;!&ndash; Mục giảm giá &ndash;&gt;-->
+<!--                    <table class="table table-bordered mt-3">-->
+<!--                        <thead>-->
+<!--                        <tr class="text-center">-->
+<!--                            <th>STT</th>-->
+<!--                            <th>Tên</th>-->
+<!--                            <th>Loại Giảm giá</th>-->
+<!--                            <th>Giá trị giảm giá</th>-->
+<!--                            <th>Số lượng</th>-->
+<!--                            <th>Chức năng</th>-->
+<!--                        </tr>-->
+<!--                        </thead>-->
+<!--                        <tbody>-->
+<!--                        <tr th:each="itemM, iterStat : ${listMaGiamGia}">-->
+<!--                            <td th:text="${iterStat.index + 1}">1</td>-->
+<!--                            <td th:text="${itemM.ten}"></td>-->
+<!--                            <td th:text="${itemM.loaiGiamGia}"></td>-->
+<!--                            <td class="text-center"-->
+<!--                                th:text="${itemM.loaiGiamGia == 'Tiền mặt' ? itemM.giaTriGiamGia + ' VND' : itemM.giaTriGiamGia + ' %'}"></td>-->
+<!--                            <td th:text="${itemM.soLuong}"></td>-->
+<!--                            <td class="text-center">-->
+<!--                                &lt;!&ndash; Form gửi POST đến controller /admin/banhang/addgimagia &ndash;&gt;-->
+<!--                                <form th:action="@{/admin/banhang/addgimagia}" method="post">-->
+<!--                                    &lt;!&ndash; Giả sử selectedHoaDon là đối tượng hóa đơn đã được truyền vào model &ndash;&gt;-->
+<!--                                    <input type="hidden" name="idhoadon" th:value="${selectedHoaDon.id}"/>-->
+<!--                                    <input type="hidden" name="idMaGiamGia" th:value="${itemM.id}"/>-->
+<!--                                    <input type="hidden" name="maHoaDon" th:value="${selectedHoaDon.maHoaDon}"/>-->
+<!--                                    <button type="submit" class="btn btn-primary">Áp Dụng</button>-->
+<!--                                </form>-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        </tbody>-->
+<!--                    </table>-->
+<!--                </div>-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">-->
+<!--                        Đóng-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
     <!-- End modal giảm giá -->
 
+    <!-- Trong <body> của banhang.html, thay thế modal giảm giá hiện tại -->
+    <div th:replace="admin/banhang/modalgiamgia :: discountModal"></div>
+
     <!-- Modal thông tin khách hàng mới -->
-    <div class="modal fade" id="khachhangmoiModal" tabindex="-1" aria-labelledby="khachhangmoiModalLabel" aria-hidden="true">
+    <div class="modal fade" id="khachhangmoiModal" tabindex="-1" aria-labelledby="khachhangmoiModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form th:action="@{/admin/banhang/addthongtinkhachhangmoi}" method="post">
@@ -491,27 +879,32 @@
                         <!-- Tên khách hàng -->
                         <div class="mb-3">
                             <label for="ten" class="form-label">Tên khách hàng</label>
-                            <input type="text" class="form-control" id="ten" name="ten" placeholder="Nhập tên khách hàng" required>
+                            <input type="text" class="form-control" id="ten" name="ten"
+                                   placeholder="Nhập tên khách hàng" required>
                         </div>
                         <!-- Số điện thoại -->
                         <div class="mb-3">
                             <label for="soDienThoai" class="form-label">Số điện thoại</label>
-                            <input type="text" class="form-control" id="soDienThoai" name="soDienThoai" placeholder="Nhập số điện thoại" required>
+                            <input type="text" class="form-control" id="soDienThoai" name="soDienThoai"
+                                   placeholder="Nhập số điện thoại" required>
                         </div>
                         <!-- Thành phố -->
                         <div class="mb-3">
                             <label for="thanhPho" class="form-label">Thành phố</label>
-                            <input type="text" class="form-control" id="thanhPho" name="thanhPho" placeholder="Nhập thành phố" required>
+                            <input type="text" class="form-control" id="thanhPho" name="thanhPho"
+                                   placeholder="Nhập thành phố" required>
                         </div>
                         <!-- Quận/Huyện -->
                         <div class="mb-3">
                             <label for="quanHuyen" class="form-label">Quận/Huyện</label>
-                            <input type="text" class="form-control" id="quanHuyen" name="quanHuyen" placeholder="Nhập quận/huyện" required>
+                            <input type="text" class="form-control" id="quanHuyen" name="quanHuyen"
+                                   placeholder="Nhập quận/huyện" required>
                         </div>
                         <!-- Phường/Xã -->
                         <div class="mb-3">
                             <label for="phuongXa" class="form-label">Phường/Xã</label>
-                            <input type="text" class="form-control" id="phuongXa" name="phuongXa" placeholder="Nhập phường/xã" required>
+                            <input type="text" class="form-control" id="phuongXa" name="phuongXa"
+                                   placeholder="Nhập phường/xã" required>
                         </div>
                         <!-- Các trường khác nếu cần -->
                     </div>
@@ -520,6 +913,7 @@
                         <button type="button" class="btn btn-info text-decoration-none" id="btnOldCustomer">
                             Khách hàng cũ
                         </button>
+<!--                        <div th:replace="~{admin/banhang/modalkhachhang :: oldCustomerModal}"></div>-->
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                         <button type="submit" class="btn btn-primary">Lưu thông tin</button>
                     </div>
@@ -530,57 +924,61 @@
     <!-- End modal thông tin khách hàng mới -->
 
     <!-- Modal thông tin khách hàng cũ -->
-    <div class="modal fade" id="oldCustomerModal" tabindex="-1" aria-labelledby="oldCustomerModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">  <!-- Thêm lớp modal-lg để tăng kích thước modal -->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="oldCustomerModalLabel">Khách hàng cũ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Mục thông tin khách hàng cũ -->
-                    <table class="table table-bordered mt-3">
-                        <thead>
-                        <tr class="text-center">
-                            <th>STT</th>
-                            <th>Tên</th>
-                            <th>Số điện thoại</th>
-                            <th>Thành phố</th>
-                            <th>Quận/Huyện</th>
-                            <th>Phường/Xã</th>
-                            <th>Chức năng</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="itemD, iterStat : ${listDiaChi}">
-                            <td th:text="${iterStat.index + 1}">1</td>
-                            <td th:text="${itemD.ten}"></td>
-                            <td th:text="${itemD.soDienThoai}"></td>
-                            <td class="text-center" th:text="${itemD.thanhPho}"></td>
-                            <td th:text="${itemD.quanHuyen}"></td>
-                            <td th:text="${itemD.phuongXa}"></td>
-                            <td class="text-center">
-                                <form th:action="@{/admin/banhang/addthongtinkhachhangcu}"sadfsdf method="post">
-                                    <input type="hidden" name="idhoadon" th:value="${idhoadons}"/>
-                                    <input type="hidden" name="idDiachi" th:value="${itemD.id}"/>
-                                    <button type="submit" class="btn btn-primary">thêm</button>
-                                </form>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                </div>
-            </div>
-        </div>
-    </div>
+<!--    <div class="modal fade" id="oldCustomerModal" tabindex="-1" aria-labelledby="oldCustomerModalLabel"-->
+<!--         aria-hidden="true">-->
+<!--        <div class="modal-dialog modal-lg">  &lt;!&ndash; Thêm lớp modal-lg để tăng kích thước modal &ndash;&gt;-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title" id="oldCustomerModalLabel">Khách hàng cũ</h5>-->
+<!--                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>-->
+<!--                </div>-->
+<!--                <div class="modal-body">-->
+<!--                    &lt;!&ndash; Mục thông tin khách hàng cũ &ndash;&gt;-->
+<!--                    <table class="table table-bordered mt-3">-->
+<!--                        <thead>-->
+<!--                        <tr class="text-center">-->
+<!--                            <th>STT</th>-->
+<!--                            <th>Tên</th>-->
+<!--                            <th>Số điện thoại</th>-->
+<!--                            <th>Thành phố</th>-->
+<!--                            <th>Quận/Huyện</th>-->
+<!--                            <th>Phường/Xã</th>-->
+<!--                            <th>Chức năng</th>-->
+<!--                        </tr>-->
+<!--                        </thead>-->
+<!--                        <tbody>-->
+<!--                        <tr th:each="itemD, iterStat : ${listDiaChi}">-->
+<!--                            <td th:text="${iterStat.index + 1}">1</td>-->
+<!--                            <td th:text="${itemD.ten}"></td>-->
+<!--                            <td th:text="${itemD.soDienThoai}"></td>-->
+<!--                            <td class="text-center" th:text="${itemD.thanhPho}"></td>-->
+<!--                            <td th:text="${itemD.quanHuyen}"></td>-->
+<!--                            <td th:text="${itemD.phuongXa}"></td>-->
+<!--                            <td class="text-center">-->
+<!--                                <form th:action="@{/admin/banhang/addthongtinkhachhangcu}" sadfsdf method="post">-->
+<!--                                    <input type="hidden" name="idhoadon" th:value="${idhoadons}"/>-->
+<!--                                    <input type="hidden" name="idDiachi" th:value="${itemD.id}"/>-->
+<!--                                    <button type="submit" class="btn btn-primary">thêm</button>-->
+<!--                                </form>-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        </tbody>-->
+<!--                    </table>-->
+<!--                </div>-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
     <!-- End modal thông tin khách hàng cũ -->
+
+    <!-- Trong <body> của banhang.html, sau các modal khác -->
+    <div th:replace="admin/banhang/modalkhachhang :: oldCustomerModal"></div>
 
     <!-- Script mở modal "Khách hàng cũ" mà không ẩn modal "khách hàng mới" -->
     <script>
-        document.getElementById('btnOldCustomer').addEventListener('click', function(e) {
+        document.getElementById('btnOldCustomer').addEventListener('click', function (e) {
             e.stopPropagation();
             e.preventDefault();
             // Tạo instance của modal "Khách hàng cũ" với backdrop không làm ẩn modal cha
@@ -592,6 +990,7 @@
             oldCustomerModal.show();
         });
     </script>
+
 
 
     <!-- Bootstrap JS -->
@@ -617,24 +1016,6 @@
             confirmButtonText: 'OK'
         });
     </script>
-
-    <!-- JavaScript để cập nhật số tiền giảm giá khi chọn mã giảm giá -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-            integrity="sha256-/xUj+3OJ+Yv5f5Ioh0U4Bhz8+Qltw+U94uoIfFf5L8k="
-            crossorigin="anonymous"></script>
-    <script>
-        $(document).ready(function () {
-            $("#maGiamGia").on("change", function () {
-                var discount = $(this).find("option:selected").data("discount");
-                if (discount !== undefined) {
-                    $("#sotiengiamgia").val(discount);
-                } else {
-                    $("#sotiengiamgia").val('');
-                }
-            });
-        });
-    </script>
-
 </div>
 <!--    end code all-->
 

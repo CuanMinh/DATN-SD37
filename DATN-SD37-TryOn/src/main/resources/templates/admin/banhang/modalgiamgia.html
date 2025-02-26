@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- Không cần include lại CSS/JS, vì đã có trong layout hoặc file chính -->
+</head>
+<body>
+
+<!-- Modal giảm giá -->
+<div th:fragment="discountModal" class="modal fade" id="discountModal" tabindex="-1"
+     aria-labelledby="discountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="width: 100%; max-height: 100%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="discountModalLabel">Thêm mã giảm giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div th:fragment="modalContent" class="modal-body" id="modal-content-giamgia">
+                <input type="hidden" id="maHoaDonHidden"
+                       th:value="${selectedHoaDon != null ? selectedHoaDon.maHoaDon : ''}"/>
+<!--                tìm kiếm-->
+                <div class="input-group input-group-sm mb-3" style="max-width: 300px;">
+                    <input type="text" class="form-control" id="searchGiamGia" placeholder="Tìm mã giảm giá" aria-label="Tìm kiếm">
+                    <button class="btn btn-primary" type="button" onclick="searchGiamGia()">Tìm kiếm</button>
+                </div>
+                <div th:if="${listMaGiamGia != null and not #lists.isEmpty(listMaGiamGia.content)}">
+                    <table class="table table-bordered mt-3">
+                        <thead>
+                        <tr class="text-center">
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Loại Giảm giá</th>
+                            <th>Giá trị giảm giá</th>
+                            <th>Số lượng</th>
+                            <th>Chức năng</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        <tr th:each="itemM, iterStat : ${listMaGiamGia.content}">
+                            <td th:text="${iterStat.index + 1 + (listMaGiamGia.number * listMaGiamGia.size)}">1</td>
+                            <td th:text="${itemM.ten}"></td>
+                            <td th:text="${itemM.loaiGiamGia}"></td>
+                            <td class="text-center"
+                                th:text="${itemM.loaiGiamGia == 'Tiền mặt' ? itemM.giaTriGiamGia + ' VND' : itemM.giaTriGiamGia + ' %'}"></td>
+                            <td th:text="${itemM.soLuong}"></td>
+                            <td class="text-center">
+                                <form th:action="@{/admin/banhang/addgimagia}" method="post">
+                                    <input type="hidden" name="idhoadon" th:value="${selectedHoaDon.id}"/>
+                                    <input type="hidden" name="idMaGiamGia" th:value="${itemM.id}"/>
+                                    <input type="hidden" name="maHoaDon" th:value="${selectedHoaDon.maHoaDon}"/>
+                                    <button type="submit" class="btn btn-primary">Áp Dụng</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:unless="${listMaGiamGia != null and not #lists.isEmpty(listMaGiamGia.content)}"
+                     class="alert alert-warning text-center">
+                    Không có mã giảm giá nào
+                </div>
+                <!-- Phân trang cho modal -->
+                <nav th:if="${listMaGiamGia != null and listMaGiamGia.totalPages >= 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${listMaGiamGia.first} ? 'disabled'">
+                            <a class="page-link" href="#" th:onclick="'loadGiamGiaModal(0)'"><<</a>
+                        </li>
+                        <li class="page-item" th:classappend="${listMaGiamGia.first} ? 'disabled'">
+                            <a class="page-link" href="#"
+                               th:onclick="'loadGiamGiaModal(' + ${listMaGiamGia.number - 1} + ')'"><</a>
+                        </li>
+                        <!-- Hiển thị các trang gần trang hiện tại (3 trang: 1 trước, hiện tại, 1 sau) -->
+                        <th:block th:each="i : ${#numbers.sequence(0, listMaGiamGia.totalPages - 1)}">
+                            <th:block th:if="${i >= listMaGiamGia.number - 1 and i <= listMaGiamGia.number + 1 and i < listMaGiamGia.totalPages}">
+                                <li class="page-item" th:classappend="${i == listMaGiamGia.number} ? 'active'">
+                                    <a class="page-link" href="#" th:onclick="'loadGiamGiaModal(' + ${i} + ')'" th:text="${i + 1}"></a>
+                                </li>
+                            </th:block>
+                        </th:block>
+
+                        <!-- Hiển thị dấu "..." nếu có nhiều trang hơn -->
+                        <th:block th:if="${listMaGiamGia.totalPages > 3}">
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" th:onclick="'loadGiamGiaModal(' + (${listMaGiamGia.totalPages - 1}) + ')'" th:text="${listMaGiamGia.totalPages}"></a>
+                            </li>
+                        </th:block>
+                        <li class="page-item" th:classappend="${listMaGiamGia.last} ? 'disabled'">
+                            <a class="page-link" href="#"
+                               th:onclick="'loadGiamGiaModal(' + ${listMaGiamGia.number + 1} + ')'">></a>
+                        </li>
+                        <li class="page-item" th:classappend="${listMaGiamGia.last} ? 'disabled'">
+                            <a class="page-link" href="#"
+                               th:onclick="'loadGiamGiaModal(' + ${listMaGiamGia.totalPages - 1} + ')'">>></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
