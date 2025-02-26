@@ -33,6 +33,7 @@ public class HoaDon {
     @Column(name = "id")
     private Long id;
 
+
     @Column(name = "ma_hoa_don")
     private String maHoaDon;
 
@@ -101,7 +102,7 @@ public class HoaDon {
     private DiaChi diaChi;
 
     @ManyToOne
-    @JoinColumn(name = "phuong_thuc_thanh_toan")
+    @JoinColumn(name = "phuong_thuc_thanh_toan_id")
     private PhuongThucThanhToan phuongThucThanhToan;
 
 

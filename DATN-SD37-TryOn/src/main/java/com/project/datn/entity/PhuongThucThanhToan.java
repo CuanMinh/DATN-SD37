@@ -35,13 +35,11 @@ public class PhuongThucThanhToan {
     @Column(name = "ten")
     private String ten;
 
-    @Column(name = "ngay_thanh_toan")
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayThanhToan;
+    @Column(name = "ma")
+    private String ma;
 
-    @Column(name = "so_tien")
-    private BigDecimal soTien;
+    @Column(name = "ghi_chu")
+    private String ghiChu;
 
     @Column(name = "trang_thai")
     private Integer trangThai;
