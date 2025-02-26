@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/index.html}">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div layout:fragment="content" class="col-lg-10 my-4" style="min-height: 600px; border: 1px solid rgba(128, 128, 128, 0.212);">
+    <h2 style="font-weight: bold">Chi Tiết Hóa Đơn</h2>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 style="font-weight: bold">Thông tin hóa đơn</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Mã hóa đơn:</strong> <span th:text="${hoaDon.maHoaDon}"></span></p>
+            <p><strong>Ngày tạo:</strong>
+                <span th:text="${#dates.format(hoaDon.ngayTaoHoaDon, 'dd/MM/yyyy HH:mm')}"></span>
+            </p>
+            <p><strong>Tổng tiền:</strong>
+                <span class="text-primary"
+                      th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'COMMA', 0, 'NONE')}"></span> VNĐ
+            </p>
+
+            <p><strong>Phí vận chuyển:</strong> <span th:text="${hoaDon.phiVanChuyen}"></span> VNĐ</p>
+            <p><strong>Ngày dự kiến giao:</strong>
+                <span th:text="${hoaDon.ngayDuKienGiaoHang != null ? #dates.format(hoaDon.ngayDuKienGiaoHang, 'dd/MM/yyyy HH:mm') : 'Chưa có'}"></span>
+            </p>
+            <p><strong>Ngày giao hàng:</strong>
+                <span th:text="${hoaDon.ngayGiaoHang != null ? #dates.format(hoaDon.ngayGiaoHang, 'dd/MM/yyyy HH:mm') : 'Chưa có'}"></span>
+            </p>
+
+            <p><strong>Ghi chú:</strong> <span th:text="${hoaDon.ghiChu}"></span></p>
+
+            <hr>
+            <h5>Trạng thái</h5>
+            <p><strong>Trạng thái thanh toán:</strong>
+                <span th:class="${hoaDon.trangThaiThanhToan == 0 ? 'fw-bold text-danger' : 'fw-bold text-success'}"
+                      th:text="${hoaDon.trangThaiThanhToan == 0 ? 'Chưa thanh toán' : 'Đã thanh toán'}"></span>
+            </p>
+
+            <p><strong>Trạng thái đơn hàng:</strong>
+                <span th:class="${hoaDon.trangThaiDonHang == 0 ? 'fw-bold text-primary' : 'fw-bold text-secondary'}"
+                      th:text="${hoaDon.trangThaiDonHang == 0 ? 'Tại quầy' : 'Online'}"></span>
+            </p>
+
+            <p><strong>Trạng thái:</strong>
+                <span th:switch="${hoaDon.trangThai}">
+                    <span class="fw-bold text-danger" th:case="0">Hủy đơn</span>
+                    <span class="fw-bold text-primary" th:case="1">Tạo đơn</span>
+                    <span class="fw-bold text-warning" th:case="2">Chờ thanh toán</span>
+                    <span class="fw-bold text-info" th:case="3">Đang giao</span>
+                    <span class="fw-bold text-success" th:case="4">Hoàn thành</span>
+                    <span class="fw-bold text-muted" th:case="*">Không xác định</span>
+                </span>
+            </p>
+            <div class="mt-4">
+                <a href="/admin/hoadon" class="btn btn-secondary">Quay lại</a>
+
+                <!-- Nút Hủy đơn (chỉ hiển thị nếu đơn chưa bị hủy) -->
+                <form th:if="${hoaDon.trangThai != 0}" th:action="@{/admin/hoadon/cancel/{id}(id=${hoaDon.id})}" method="post"
+                      class="d-inline">
+                    <button class="btn btn-danger" type="submit"
+                            onclick="return confirm('Bạn có chắc chắn muốn hủy hóa đơn này?')">
+                        Hủy hóa đơn
+                    </button>
+                </form>
+
+                <!-- Nút Giao hàng (chỉ hiển thị nếu đơn là Online và chưa giao) -->
+                <form th:if="${hoaDon.trangThaiDonHang == 1 and hoaDon.trangThai < 3}"
+                      th:action="@{/admin/hoadon/giaohang/{id}(id=${hoaDon.id})}" method="post" class="d-inline">
+                    <button class="btn btn-primary" type="submit"
+                            onclick="return confirm('Xác nhận giao hàng?')">
+                        Giao hàng
+                    </button>
+                </form>
+
+                <!-- Nút Thanh toán (chỉ hiển thị nếu đơn đang giao) -->
+                <form th:if="${hoaDon.trangThai == 3}"
+                      th:action="@{/admin/hoadon/thanhtoan/{id}(id=${hoaDon.id})}" method="post" class="d-inline">
+                    <button class="btn btn-success" type="submit"
+                            onclick="return confirm('Xác nhận thanh toán hóa đơn này?')">
+                        Thanh toán
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
