@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/admin-layout.html}">
+<head>
+</head>
+<body>
+<div layout:fragment="content" >
+
+    <h1 class="text-center fw-bold text-primary mb-4">QUẢN LÝ TÀI KHOẢN KHÁCH HÀNG</h1>
+
+    <div class="container mt-4">
+        <div th:if="${message}" class="alert alert-success" role="alert">
+            <span th:text="${message}"></span>
+        </div>
+        <div id="successMessage" class="alert alert-success d-none" role="alert"></div>
+        <div class="d-flex justify-content-end align-items-center mb-3">
+            <a href="/admin/khachhang/them-khachhang" class="btn btn-success rounded-pill px-4 py-2">
+                <i class="fas fa-user-plus"></i> Thêm Tài Khoản
+            </a>
+        </div>
+
+
+        <!-- Modal Cập Nhật -->
+        <div id="updateModal" class="modal fade" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cập Nhật Tài Khoản</h5>
+
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+
+
+                    </div>
+                    <div class="modal-body">
+                        <form id="updateForm">
+                            <input type="hidden" id="updateId">
+                            <div class="mb-3">
+                                <label>Tên:</label>
+                                <input type="text" id="updateTen" class="form-control">
+                                <div id="errorUpdateTen" class="text-danger d-none">Tên phải từ 2 đến 100 ký tự</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Email:</label>
+                                <input type="email" id="updateEmail" class="form-control">
+                                <div id="errorUpdateEmail" class="text-danger d-none">Email không hợp lệ</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Số Điện Thoại:</label>
+                                <input type="text" id="updateSoDienThoai" class="form-control">
+                                <div id="errorUpdateSoDienThoai" class="text-danger d-none">Số điện thoại phải từ 10 - 11 số
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Vai Trò:</label>
+                                <select id="updateVaiTro" name="vaiTroIds" class="form-control">
+                                    <option th:each="vaiTro : ${danhSachVaiTro}"
+                                            th:value="${vaiTro.id}"
+                                            th:text="${vaiTro.ten}">
+                                    </option>
+                                </select>
+
+                                <div id="errorUpdateVaiTro" class="text-danger d-none">Vui lòng chọn 1 vai trò</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+
+                                <button type="button" class="btn btn-primary" onclick="submitUpdate()">Cập Nhật</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table id="myTable" class="table table-bordered">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="khachHang : ${danhSachKhachHang}">
+                <td th:text="${khachHang.id}"></td>
+                <td th:text="${khachHang.ten}"></td>
+                <td th:text="${khachHang.email}"></td>
+                <td th:text="${khachHang.soDienThoai}"></td>
+                <td>
+                    <span th:each="vaiTroTaiKhoan : ${khachHang.vaiTroTaiKhoans}"
+                          th:text="${vaiTroTaiKhoan.vaiTro.ten}"></span>
+                </td>
+                <td>
+                    <span th:if="${khachHang.trangThai == 1}" class="badge bg-success">Hoạt động</span>
+                    <span th:if="${khachHang.trangThai == 0}" class="badge bg-danger">Bị khóa</span>
+                </td>
+                <td>
+                    <!-- Nút Khóa tài khoản -->
+                    <button class="btn btn-danger btn-sm" th:if="${khachHang.trangThai == 1}"
+                            th:attr="data-id=${khachHang.id}" onclick="confirmBlock(this)">
+                        Khóa
+                    </button>
+
+                    <!-- Nút Mở khóa tài khoản -->
+                    <button class="btn btn-success btn-sm" th:if="${khachHang.trangThai == 0}"
+                            th:attr="data-id=${khachHang.id}" onclick="confirmOpen(this)">
+                        Mở khóa
+                    </button>
+                    <button class="btn btn-warning btn-sm"
+                            th:attr="data-id=${khachHang.id},
+                 data-ten=${khachHang.ten},
+                 data-email=${khachHang.email},
+                 data-soDienThoai=${khachHang.soDienThoai},
+                 data-vaiTroIds=${khachHang.vaiTroTaiKhoans.![vaiTro.id]}"
+
+                            onclick="openUpdateModal(this)">
+                        Cập nhật
+                    </button>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
+
+
+<script>
+    $(document).ready(function () {
+        let table = $('#myTable').DataTable({
+            "paging": true,
+            "lengthMenu": [5, 10, 25, 50, 100],
+            "pageLength": 5,
+            "ordering": true,
+            "info": true,
+            "searching": true,  // Bật tìm kiếm của DataTables
+            "language": {
+                "search": "Tìm kiếm:",
+                "lengthMenu": "Hiển thị _MENU_ bản ghi",
+                "info": "Hiển thị trang _PAGE_ trong _PAGES_",
+                "paginate": {
+                    "first": "Đầu",
+                    "last": "Cuối",
+                    "next": "Tiếp",
+                    "previous": "Trước"
+                },
+                "zeroRecords": "Không tìm thấy dữ liệu phù hợp",
+                "infoEmpty": "Không có bản ghi nào",
+                "infoFiltered": "(Lọc từ _MAX_ bản ghi)"
+            }
+        });
+
+        // Gắn sự kiện tìm kiếm vào ô nhập liệu
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    });
+
+
+
+    function confirmBlock(button) {
+        let userId = button.getAttribute("data-id"); // Lấy ID của tài khoản
+
+        Swal.fire({
+            title: "Xác nhận khóa tài khoản?",
+            text: "Bạn có chắc chắn muốn khóa tài khoản này không?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Khóa ngay",
+            cancelButtonText: "Hủy"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Gửi request POST để khóa tài khoản
+                fetch(`/admin/khachhang/block/${userId}`, {method: 'POST'})
+                    .then(response => {
+                        if (response.ok) {
+                            sessionStorage.setItem("message", "Khóa tài khoản thành công!");
+                            Swal.fire("Thành công!", "Tài khoản đã bị khóa.", "success")
+                                .then(() => location.reload()); // Reload lại trang sau khi khóa
+                        } else {
+                            Swal.fire("Lỗi!", "Không thể khóa tài khoản.", "error");
+                        }
+                    })
+                    .catch(() => Swal.fire("Lỗi!", "Không thể kết nối đến server.", "error"));
+            }
+        });
+    }
+
+    function confirmOpen(button) {
+        let userId = button.getAttribute("data-id");
+
+        Swal.fire({
+            title: "Xác nhận mở khóa tài khoản?",
+            text: "Bạn có chắc chắn muốn mở khóa tài khoản này không?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Mở khóa",
+            cancelButtonText: "Hủy"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Gửi request POST để mở khóa tài khoản
+                fetch(`/admin/khachhang/open/${userId}`, {method: 'POST'})
+                    .then(response => {
+                        if (response.ok) {
+                            sessionStorage.setItem("message", "Mở khóa tài khoản thành công!");
+                            Swal.fire("Thành công!", "Tài khoản đã được mở khóa.", "success")
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire("Lỗi!", "Không thể mở khóa tài khoản.", "error");
+                        }
+                    })
+                    .catch(() => Swal.fire("Lỗi!", "Không thể kết nối đến server.", "error"));
+            }
+        });
+    }
+
+    function openUpdateModal(button) {
+        let userId = button.getAttribute("data-id");
+        let ten = button.getAttribute("data-ten");
+        let email = button.getAttribute("data-email");
+        let soDienThoai = button.getAttribute("data-soDienThoai");
+        let vaiTroIds = JSON.parse(button.getAttribute("data-vaiTroIds")); // Chuyển thành mảng số
+
+        document.getElementById("updateId").value = userId;
+        document.getElementById("updateTen").value = ten;
+        document.getElementById("updateEmail").value = email;
+        document.getElementById("updateSoDienThoai").value = soDienThoai;
+
+        let vaiTroSelect = document.getElementById("updateVaiTro");
+        for (let option of vaiTroSelect.options) {
+            option.selected = vaiTroIds.includes(parseInt(option.value)); // Đánh dấu `selected`
+        }
+
+        new bootstrap.Modal(document.getElementById("updateModal")).show();
+    }
+
+    function submitUpdate() {
+        let isValid = true;
+
+        // Lấy giá trị input
+        let id = document.getElementById("updateId").value;
+        let ten = document.getElementById("updateTen").value.trim();
+        let email = document.getElementById("updateEmail").value.trim();
+        let soDienThoai = document.getElementById("updateSoDienThoai").value.trim();
+        let vaiTroIds = Array.from(document.getElementById("updateVaiTro").selectedOptions).map(opt => opt.value);
+
+        // Xóa lỗi cũ trước khi kiểm tra lại
+        $(".error-message").addClass("d-none");
+
+        // Validate Tên
+        if (ten.length < 2 || ten.length > 100) {
+            $("#errorUpdateTen").removeClass("d-none").text("Tên phải từ 2 đến 100 ký tự.");
+            isValid = false;
+        }
+
+        // Validate Email
+        let emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailPattern.test(email) || email.length > 100) {
+            $("#errorUpdateEmail").removeClass("d-none").text("Email không hợp lệ hoặc quá dài.");
+            isValid = false;
+        }
+
+        // Validate Số Điện Thoại
+        let phonePattern = /^[0-9]{10,11}$/;
+        if (!phonePattern.test(soDienThoai)) {
+            $("#errorUpdateSoDienThoai").removeClass("d-none").text("Số điện thoại phải có 10-11 số.");
+            isValid = false;
+        }
+
+        // Validate Vai Trò
+        if (!vaiTroIds || vaiTroIds.length === 0) {
+            $("#errorUpdateVaiTro").removeClass("d-none").text("Vui lòng chọn ít nhất một vai trò.");
+            isValid = false;
+        }
+
+        // Nếu có lỗi, dừng lại
+        if (!isValid) return;
+
+        // Vô hiệu hóa nút để tránh spam request
+        $("#updateButton").prop("disabled", true).text("Đang cập nhật...");
+
+        // Gửi request kiểm tra trùng lặp
+        $.ajax({
+            url: `/admin/khachhang/check-duplicate-update?id=${id}&ten=${encodeURIComponent(ten)}&email=${encodeURIComponent(email)}&soDienThoai=${encodeURIComponent(soDienThoai)}`,
+            type: "GET",
+            success: function (data) {
+                let duplicateError = false;
+
+                if (data.tenExists) {
+                    $("#errorUpdateTen").removeClass("d-none").text("Tên đã tồn tại!");
+                    duplicateError = true;
+                }
+
+                if (data.emailExists) {
+                    $("#errorUpdateEmail").removeClass("d-none").text("Email đã tồn tại!");
+                    duplicateError = true;
+                }
+
+                if (data.soDienThoaiExists) {
+                    $("#errorUpdateSoDienThoai").removeClass("d-none").text("Số điện thoại đã tồn tại!");
+                    duplicateError = true;
+                }
+
+                if (duplicateError) {
+                    $("#updateButton").prop("disabled", false).text("Cập nhật");
+                    return;
+                }
+
+                // Nếu không trùng, gửi request cập nhật
+                $.ajax({
+                    url: `/admin/khachhang/update/${id}`,
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        ten: ten,
+                        email: email,
+                        soDienThoai: soDienThoai,
+                        vaiTroIds: vaiTroIds
+                    }),
+                    success: function () {
+                        sessionStorage.setItem("message", "Cập nhật tài khoản thành công!");
+                        Swal.fire("Thành công!", "Tài khoản đã được cập nhật.", "success")
+                            .then(() => location.reload());
+                    },
+                    error: function (xhr) {
+                        let errorMessage = xhr.responseText || "Không thể cập nhật tài khoản.";
+                        Swal.fire("Lỗi!", errorMessage, "error");
+                        $("#updateButton").prop("disabled", false).text("Cập nhật");
+                    }
+                });
+            },
+            error: function () {
+                Swal.fire("Lỗi!", "Không thể kiểm tra dữ liệu trùng lặp.", "error");
+                $("#updateButton").prop("disabled", false).text("Cập nhật");
+            }
+        });
+    }
+    // Khi modal đóng, reset form và ẩn lỗi
+    $('#updateModal').on('hidden.bs.modal', function () {
+        $('#updateForm')[0].reset(); // Reset toàn bộ form
+
+        // Ẩn tất cả thông báo lỗi
+        $('#errorUpdateTen').addClass('d-none');
+        $('#errorUpdateEmail').addClass('d-none');
+        $('#errorUpdateSoDienThoai').addClass('d-none');
+        $('#errorUpdateVaiTro').addClass('d-none');
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        let message = sessionStorage.getItem("message");
+        if (message) {
+            let messageDiv = document.getElementById("successMessage");
+            messageDiv.textContent = message;
+            messageDiv.classList.remove("d-none");
+
+            sessionStorage.removeItem("message"); // Xóa thông báo sau khi hiển thị
+        }
+    });
+
+</script>
