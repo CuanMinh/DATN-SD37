@@ -31,24 +31,20 @@
         <thead>
         <tr class="table-dark">
             <th>Thời gian</th>
-            <th>Doanh thu</th>
+            <th>Doanh thu (VNĐ)</th>
         </tr>
         </thead>
         <tbody id="revenueTableBody">
-
         </tbody>
     </table>
 </div>
 
 <script>
-
     let revenueChart;
-
 
     window.addEventListener('load', function() {
         fetchData("ngay");
     });
-
 
     document.getElementById("filterForm").addEventListener("submit", function(event) {
         event.preventDefault();
@@ -56,21 +52,35 @@
         fetchData(type);
     });
 
-
     function fetchData(type) {
         fetch(`/admin/thongkedoanhthu/data?type=${type}`)
             .then(response => response.json())
             .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    showError("Không có dữ liệu doanh thu.");
+                    updateChart([], []);
+                    updateTable([]);
+                    return;
+                }
 
                 const labels = data.map(item => item.thoiGian);
-                const doanhThu = data.map(item => item.tongDoanhThu);
+                const doanhThu = data.map(item => parseFloat(item.tongDoanhThu) || 0);
 
                 updateChart(labels, doanhThu);
-
                 updateTable(data);
             })
-            .catch(error => console.error("Error fetching data:", error));
+            .catch(error => {
+                showError("Lỗi khi lấy dữ liệu từ server.");
+                console.error("Lỗi khi lấy dữ liệu:", error);
+            });
     }
+
+    function showError(message) {
+        document.getElementById("revenueTableBody").innerHTML = `
+        <tr><td colspan="2" class="text-center text-danger">${message}</td></tr>
+    `;
+    }
+
 
     function updateChart(labels, data) {
         const ctx = document.getElementById('revenueChart').getContext('2d');
@@ -79,21 +89,36 @@
             revenueChart.destroy();
         }
 
+        // Nếu không có dữ liệu, hiển thị 1 cột 0 VNĐ
+        if (labels.length === 0) {
+            labels = ["Không có dữ liệu"];
+            data = [0];
+        }
+
         revenueChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Doanh thu',
+                    label: 'Doanh thu (VNĐ)',
                     data: data,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: true }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -104,7 +129,7 @@
         tbody.innerHTML = "";
 
         data.forEach(item => {
-            const formattedDoanhThu = item.tongDoanhThu.toLocaleString('vi-VN');
+            const formattedDoanhThu = (parseFloat(item.tongDoanhThu) || 0).toLocaleString('vi-VN');
             const row = `
                 <tr>
                     <td>${item.thoiGian}</td>
