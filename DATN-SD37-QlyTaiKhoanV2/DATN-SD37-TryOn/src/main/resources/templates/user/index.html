@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Summer Men's Clothing Store" />
+    <meta name="author" content="" />
+    <title>Summer Men's Clothing</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/../assets/favicon.ico}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        .nav-link {
+            font-size: 1.1rem;
+            color: #333;
+            padding: 10px 15px;
+        }
+        .nav-link:hover {
+            color: #0071e3;
+        }
+        .hero {
+            background-image: url('https://via.placeholder.com/1500x500');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            padding: 100px 20px;
+            color: white;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+        .product-list {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 40px 0;
+        }
+        .product-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .product-item img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .owl-carousel .item {
+            padding: 10px;
+            text-align: center;
+        }
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #0071e3;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Try On</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#home">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#products">Products</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#about">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#contact">Contact</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Owl Carousel Section -->
+<div class="container my-4">
+    <h2 class="text-center">Lựa chọn hàng đầu
+    </h2>
+    <div class="owl-carousel owl-theme">
+        <div class="item"><img src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/342cae83-42be-4c1f-98de-b8d5f525bae9/AS+M+NK+RPL+MILER+JKT.png" alt="Slide 1"></div>
+        <div class="item"><img src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/af982a3d-ca50-40a4-a548-0842baabcd74/AS+M+NK+RPL+MILER+JKT.png" alt="Slide 2"></div>
+        <div class="item"><img src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/e163bc6b-a318-48b3-82db-503a300df444/AS+M+NK+RPL+MILER+JKT.png" alt="Slide 3"></div>
+        <div class="item"><img src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/bd867f04-8c25-4127-85ea-ca6604d7226d/AS+M+NK+RPL+MILER+JKT.png" alt="Slide 4"></div>
+    </div>
+</div>
+
+<!-- Product Section -->
+<section id="products" class="container">
+    <h2 class="text-center my-4">
+        Sản phẩm nổi bật</h2>
+    <div class="product-list">
+        <div class="product-item">
+            <img src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/191eeea5-8a43-4c40-b9a1-6c3735e97f82/SEL+MNK+DF+JSY+JAMES.png" alt="Summer Shirt">
+            <h3>Áo ba lỗ</h3>
+            <p>Nhẹ và thoáng khí cho những ngày nắng nóng.</p>
+            <span>300.000 VNĐ</span>
+        </div>
+        <div class="product-item">
+            <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/u_126ab356-44d8-4a06-89b4-fcdcc8df0245,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/rucuwjbfaz3ayskph9bp/M+J+JUMPMAN+AIR+EMBRD+TEE.png" alt="Casual Shorts">
+            <h3>Áo cộc tay</h3>
+            <p>Thoải mái và phong cách, hoàn hảo cho mùa hè.
+            </p>
+            <span>300.000 VNĐ</span>
+        </div>
+        <div class="product-item">
+            <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/kb8pxbc0or8ugqehwxat/AS+M+NSW+TEE+JUST+DO+IT+SWOOSH.png" alt="Summer Hat">
+            <h3>Áo cộc tay</h3>
+            <p>
+                Bảo vệ bạn khỏi ánh nắng mặt trời một cách phong cách.</p>
+            <span>300.000 VNĐ</span>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <p>&copy; 2024 Summer Style. All rights reserved.</p>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $(".owl-carousel").owlCarousel({
+            loop: true,
+            margin: 10,
+            nav: true,
+            autoplay: true,
+            autoplayTimeout: 3000,
+            responsive: {
+                0: { items: 1 },
+                600: { items: 2 },
+                1000: { items: 3 }
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/admin-layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Mã Giảm Giá</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+
+<div layout:fragment="content" class="col-lg-10 my-4">
+    <h1>Quản lý Mã Giảm Giá</h1>
+    <a href="/admin/giamgia/them" class="btn btn-success mb-3">Thêm mã giảm giá</a>
+
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Mã Giảm Giá</th>
+            <th>Loại</th>
+            <th>Giá Trị</th>
+            <th>Ngày tạo</th>
+            <th>Số lượng</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="mgg : ${mgglist}">
+            <td th:text="${mgg.ten}"></td>
+            <td th:text="${mgg.loaiGiamGia}"></td>
+            <td>
+                <span th:if="${mgg.loaiGiamGia == 'Phần trăm'}" th:text="${mgg.giaTriGiamGia} + '%'" ></span>
+                <span th:if="${mgg.loaiGiamGia == 'Tiền mặt'}" th:text="${#numbers.formatDecimal(mgg.giaTriGiamGia, 0, 2)} + ' VNĐ'" ></span>
+            </td>
+            <td th:text="${mgg.ngayTao}"></td>
+            <td th:text="${mgg.soLuong}"></td>
+            <td th:text="${mgg.trangThai} ? 'Hoạt động' : 'Không hoạt động'"></td>
+            <td>
+                <a class="btn btn-primary btn-sm" th:href="@{/admin/giamgia/sua/{id}(id=${mgg.id})}">Sửa</a>
+                <a class="btn btn-danger btn-sm" th:href="@{/admin/giamgia/xoa/{id}(id=${mgg.id})}" onclick="return confirm('Bạn có chắc chắn muốn xóa?');">Xóa</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

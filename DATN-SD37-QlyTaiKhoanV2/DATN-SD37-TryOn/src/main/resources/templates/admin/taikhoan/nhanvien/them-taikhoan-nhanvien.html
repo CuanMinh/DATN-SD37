@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/admin-layout.html}">
+<head>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <h1>Thêm Tài Khoản Mới</h1>
+    <div class="container mt-5">
+        <div class="card shadow-lg p-4">
+            <h2 class="text-center mb-4">Thêm Tài Khoản</h2>
+
+            <form action="/admin/nhanvien/them-nhanvien" method="post" id="addForm">
+                <div class="mb-3">
+                    <label class="form-label">Tên:</label>
+                    <input type="text" id="ten" name="ten" class="form-control" required
+                           placeholder="Nhập tên tài khoản">
+                    <small class="text-danger d-none" id="errorTen">Tên phải từ 2 đến 100 ký tự.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email:</label>
+                    <input type="email" id="email" name="email" class="form-control" required placeholder="Nhập email">
+                    <small class="text-danger d-none" id="errorEmail">Email không hợp lệ hoặc quá dài.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Số Điện Thoại:</label>
+                    <input type="text" id="soDienThoai" name="soDienThoai" class="form-control" required
+                           placeholder="Nhập số điện thoại">
+                    <small class="text-danger d-none" id="errorSoDienThoai">Số điện thoại phải từ 10 - 11 số.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Chọn Vai Trò:</label>
+                    <select id="vaiTroIds" name="vaiTroIds" class="form-select select2">
+                        <option value="" disabled selected>-- Chọn vai trò --</option>
+                        <option th:each="vaiTro : ${danhSachVaiTro}" th:value="${vaiTro.id}"
+                                th:text="${vaiTro.ten}"></option>
+                    </select>
+                    <small class="text-danger d-none" id="errorVaiTro">Bạn phải chọn một vai trò.</small>
+                </div>
+
+                <div>
+                    <a href="/admin/nhanvien" class="btn btn-secondary">Quay Lại</a>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            placeholder: "Chọn một vai trò...",
+            allowClear: true,
+            minimumResultsForSearch: -1
+        });
+
+        // Hàm kiểm tra lỗi chung
+        async function validateField(type, value, errorSelector, options = {}) {
+            let { pattern, min, max, emptyMessage, lengthMessage, patternMessage, duplicateMessage } = options;
+            let errorMessage = "";
+
+            // Kiểm tra rỗng
+            if (!value.trim()) {
+                errorMessage = emptyMessage || "Trường này không được để trống.";
+            }
+
+            // Kiểm tra độ dài
+            if (!errorMessage && min && max && (value.length < min || value.length > max)) {
+                errorMessage = lengthMessage || `Độ dài phải từ ${min} đến ${max} ký tự.`;
+            }
+
+            // Kiểm tra pattern (email, số điện thoại,...)
+            if (!errorMessage && pattern && !pattern.test(value)) {
+                errorMessage = patternMessage || "Dữ liệu không hợp lệ.";
+            }
+
+            // Kiểm tra trùng dữ liệu (nếu không có lỗi trước đó)
+            if (!errorMessage && type) {
+                let isDuplicate = await checkDuplicate(type, value);
+                if (isDuplicate) {
+                    errorMessage = duplicateMessage.replace("{value}", value) || `Giá trị '${value}' đã tồn tại trong hệ thống.`;
+                }
+            }
+
+            // Hiển thị hoặc ẩn lỗi
+            if (errorMessage) {
+                $(errorSelector).removeClass("d-none").text(errorMessage);
+                return false;
+            } else {
+                $(errorSelector).addClass("d-none");
+                return true;
+            }
+        }
+
+        // Kiểm tra khi rời khỏi ô input
+        $("#ten").on("blur", function () {
+            validateField("ten", this.value, "#errorTen", {
+                min: 2,
+                max: 100,
+                emptyMessage: "Vui lòng nhập tên tài khoản.",
+                lengthMessage: "Tên phải từ 2 đến 100 ký tự.",
+                duplicateMessage: "Tên tài khoản '{value}' đã tồn tại."
+            });
+        });
+
+        $("#email").on("blur", function () {
+            let emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            validateField("email", this.value, "#errorEmail", {
+                min: 5,
+                max: 100,
+                pattern: emailPattern,
+                emptyMessage: "Vui lòng nhập email.",
+                lengthMessage: "Email phải từ 5 đến 100 ký tự.",
+                patternMessage: "Email không hợp lệ. Ví dụ đúng: example@gmail.com",
+                duplicateMessage: "Email '{value}' đã được sử dụng."
+            });
+        });
+
+        $("#soDienThoai").on("blur", function () {
+            let phonePattern = /^[0-9]{10,11}$/;
+            validateField("soDienThoai", this.value, "#errorSoDienThoai", {
+                pattern: phonePattern,
+                emptyMessage: "Vui lòng nhập số điện thoại.",
+                patternMessage: "Số điện thoại phải có 10 hoặc 11 chữ số.",
+                duplicateMessage: "Số điện thoại '{value}' đã tồn tại."
+            });
+        });
+
+        // Kiểm tra vai trò khi thay đổi
+        $("#vaiTroIds").on("change", function () {
+            if (!this.value) {
+                $("#errorVaiTro").removeClass("d-none").text("Bạn phải chọn một vai trò.");
+            } else {
+                $("#errorVaiTro").addClass("d-none");
+            }
+        });
+
+        // Kiểm tra khi submit
+        $("#addForm").submit(async function (e) {
+            e.preventDefault();
+            let isValid = true;
+
+            let ten = $("#ten").val();
+            let email = $("#email").val();
+            let soDienThoai = $("#soDienThoai").val();
+            let vaiTroId = $("#vaiTroIds").val();
+
+            isValid &= await validateField("ten", ten, "#errorTen", {
+                min: 2,
+                max: 100,
+                emptyMessage: "Vui lòng nhập tên tài khoản.",
+                lengthMessage: "Tên phải từ 2 đến 100 ký tự.",
+                duplicateMessage: "Tên tài khoản '{value}' đã tồn tại."
+            });
+
+            isValid &= await validateField("email", email, "#errorEmail", {
+                min: 5,
+                max: 100,
+                pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                emptyMessage: "Vui lòng nhập email.",
+                lengthMessage: "Email phải từ 5 đến 100 ký tự.",
+                patternMessage: "Email không hợp lệ. Ví dụ đúng: example@gmail.com",
+                duplicateMessage: "Email '{value}' đã được sử dụng."
+            });
+
+            isValid &= await validateField("soDienThoai", soDienThoai, "#errorSoDienThoai", {
+                pattern: /^[0-9]{10,11}$/,
+                emptyMessage: "Vui lòng nhập số điện thoại.",
+                patternMessage: "Số điện thoại phải có 10 hoặc 11 chữ số.",
+                duplicateMessage: "Số điện thoại '{value}' đã tồn tại."
+            });
+
+            if (!vaiTroId) {
+                $("#errorVaiTro").removeClass("d-none").text("Bạn phải chọn một vai trò.");
+                isValid = false;
+            } else {
+                $("#errorVaiTro").addClass("d-none");
+            }
+
+            if (isValid) {
+                this.submit();
+            }
+        });
+
+        // Hàm AJAX kiểm tra trùng dữ liệu
+        async function checkDuplicate(type, value) {
+            if (!value) return false;
+            let url = `/admin/nhanvien/kiem-tra-trung?${type}=` + encodeURIComponent(value);
+            try {
+                let response = await fetch(url);
+                return !response.ok; // Nếu response không OK tức là bị trùng
+            } catch (error) {
+                console.error("Lỗi khi kiểm tra trùng:", error);
+                return false;
+            }
+        }
+    });
+</script>
+
