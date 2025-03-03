@@ -1,16 +1,46 @@
 package com.project.datn.controller.admin.Thongke;
 
+import com.project.datn.DTO.ThongKeDoanhThuDTO;
+import com.project.datn.service.impl.ThongKeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin/thongkedoanhthu")
 public class ThongKeDoanhThuController {
-    @RequestMapping("")
-    public ModelAndView list(ModelMap model) {
-        model.addAttribute("menuDT", "menu");
-        return new ModelAndView("/admin/thongke/doanhthu/thongkedoanhthu", model);
+
+    @Autowired
+    private ThongKeService thongKeService;
+
+    @GetMapping("")
+    public String thongKeDoanhThuPage() {
+        return "admin/thongke/doanhthu/thongkedoanhthu";
+    }
+
+
+    @GetMapping("/data")
+    @ResponseBody
+    public List<ThongKeDoanhThuDTO> thongKeDoanhThuData(
+            @RequestParam(required = false, defaultValue = "ngay") String type) {
+        List<ThongKeDoanhThuDTO> result;
+        switch (type) {
+            case "thang":
+                result = thongKeService.thongKeDoanhThuTheoThang();
+                break;
+            case "nam":
+                result = thongKeService.thongKeDoanhThuTheoNam();
+                break;
+            default:
+                result = thongKeService.thongKeDoanhThuTheoNgay();
+        }
+        return result;
     }
 }

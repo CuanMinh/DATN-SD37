@@ -31,6 +31,8 @@ public class SanPham {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+    @Column(name = "ma")
+    private String ma;
 
     @Column(name = "ten")
     private String ten;
