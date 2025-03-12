@@ -33,7 +33,7 @@ public class UserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String ten) throws UsernameNotFoundException {
-        Optional<TaiKhoan> userOpt = taiKhoanRepository.findByTen(ten);
+        Optional<TaiKhoan> userOpt = taiKhoanRepository.FindByTen(ten);
 
         if (userOpt.isEmpty()) {
             System.out.println("Tên Không tìm thấy! " + ten);
@@ -50,7 +50,7 @@ public class UserDetailService implements UserDetailsService {
 
         System.out.println(arole.get().getTen());
 
-        UserDetails userDetails = (UserDetails) new User(userOpt.get().getEmail(),
+        UserDetails userDetails = (UserDetails) new User(userOpt.get().getTen(),
                 userOpt.get().getPassword().trim(), grantList);
 
         return userDetails;

@@ -39,7 +39,7 @@ public class HomeController {
         model.addAttribute("isLogin", isLogin);
 
         if (principal != null) {
-            Optional<TaiKhoan> c = accountRepository.FindByEmail(principal.getName());
+            Optional<TaiKhoan> c = accountRepository.FindByTen(principal.getName());
             Optional<VaiTroTaiKhoan> uRole = roleAccountRepository.findByTaiKhoan_Id(Long.valueOf(c.get().getId()));
             if (uRole.get().getVaiTro().getTen().equals("ROLE_ADMIN")) {
                 return new ModelAndView("forward:/admin/sanpham", model);
