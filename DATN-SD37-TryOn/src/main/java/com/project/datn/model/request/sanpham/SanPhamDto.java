@@ -25,5 +25,7 @@ public class SanPhamDto {
     private Long chatLieuId;
     private Long thuongHieuId;
     private MultipartFile anh;
+    private String anhUrl;
     private String listSanPham;
+    private Long anhId;
 }

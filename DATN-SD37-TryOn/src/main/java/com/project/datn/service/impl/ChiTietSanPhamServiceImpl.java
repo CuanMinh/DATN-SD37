@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ChiTietSanPhamServiceImpl implements IChiTietSanPhamService {
@@ -22,5 +23,10 @@ public class ChiTietSanPhamServiceImpl implements IChiTietSanPhamService {
     @Override
     public List<ChiTietSanPham> findAllBySanPhamId(Long sanPhamId) {
         return this.chiTietSanPhamRepository.findAllBySanPhamIdAndTrangThai(sanPhamId, 1);
+    }
+
+    @Override
+    public Optional<ChiTietSanPham> findById(Long id) {
+        return this.chiTietSanPhamRepository.findById(id);
     }
 }
