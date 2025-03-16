@@ -16,8 +16,8 @@
         <p class="text-center">Vui lòng chuyển khoản cho hóa đơn có mã:
             <strong th:text="${maHoaDon}"></strong>
         </p><p class="text-center">số tiền cần thanh toán là:
-            <strong th:text="${tienThanhToan}"></strong>
-        </p>
+        <strong th:text="${#numbers.formatDecimal(tienThanhToan, 0, 'COMMA', 0, 'POINT') + ' VND'}"></strong>
+    </p>
         <div class="text-center">
             <img th:src="@{'/getbill/' + ${photo}}" class="img-fluid rounded border"
                  style="max-width: 300px;" alt="Mã QR thanh toán">

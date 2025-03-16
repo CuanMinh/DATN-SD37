@@ -112,7 +112,7 @@ public class HoaDonServiceImpl implements IHoaDonService {
             hoaDon.setNgayCapNhap(new Date());
             hoaDon.setTrangThaiDonHang(0);
             hoaDon.setTrangThaiThanhToan(1);
-            hoaDon.setTrangThai(4);
+            hoaDon.setTrangThai(5);
             hoaDon.setPhuongThucThanhToan(phuongThucThanhToan);
             for (HoaDonChiTiet hoaDonChiTiet : hoaDonChiTiets) {
                 Optional<ChiTietSanPham> optionalChiTietSanPham = chiTietSanPhamRepository.findById(hoaDonChiTiet.getChiTietSanPham().getId());
@@ -125,7 +125,7 @@ public class HoaDonServiceImpl implements IHoaDonService {
             if (optionalMaGiamGia.isPresent()) {
                 MaGiamGia maGiamGia = optionalMaGiamGia.get();
                 maGiamGia.setSoLuong(maGiamGia.getSoLuong() - 1);
-                maGiamGia.setNgayCapNhap(new Date());
+//                maGiamGia.setNgayCapNhap(new Date());
                 maGiamGiaRepository.save(maGiamGia);
             }
         } else if (phuongThucThanhToan.getId().equals(2L)) { // Thanh toán chuyển khoản

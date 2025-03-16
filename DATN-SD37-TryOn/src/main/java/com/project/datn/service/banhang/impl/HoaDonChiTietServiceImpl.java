@@ -11,6 +11,7 @@ import com.project.datn.service.banhang.IHoaDonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -22,12 +23,24 @@ public class HoaDonChiTietServiceImpl implements IHoaDonChiTietService {
 
     @Override
     public HoaDonChiTiet addHoaDonChiTiet(HoaDonChiTietRequest hoaDonChiTietRequest) {
-        Optional<ChiTietSanPham> chiTietSanPham = chiTietSanPhamRepository.findById(hoaDonChiTietRequest.getIdChiTietSanPham());
+        Optional<ChiTietSanPham> optionalChiTietSanPham = chiTietSanPhamRepository.findById(hoaDonChiTietRequest.getIdChiTietSanPham());
+
+        if (optionalChiTietSanPham.isEmpty()) {
+            throw new IllegalArgumentException("Chi tiết sản phẩm không tồn tại");
+        }
+
+        ChiTietSanPham chiTietSanPham = optionalChiTietSanPham.get();
+        BigDecimal giaSanPham = chiTietSanPham.getGia() != null ? chiTietSanPham.getGia() : BigDecimal.ZERO;
+        BigDecimal giamGiaSanPham = chiTietSanPham.getGiamGia() != null ? chiTietSanPham.getGiamGia() : BigDecimal.ZERO;
+
+        BigDecimal giaSauGiam = giaSanPham.subtract(giamGiaSanPham);
+
         HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
         hoaDonChiTiet.setSoLuong(hoaDonChiTietRequest.getSoLuong());
-        hoaDonChiTiet.setGia(chiTietSanPham.get().getGia());
+        hoaDonChiTiet.setGia(giaSauGiam);
         hoaDonChiTiet.setHoaDon(HoaDon.builder().id(hoaDonChiTietRequest.getIdHoaDon()).build());
         hoaDonChiTiet.setChiTietSanPham(ChiTietSanPham.builder().id(hoaDonChiTietRequest.getIdChiTietSanPham()).build());
+
         return hoaDonChiTietRepository.save(hoaDonChiTiet);
     }
 

@@ -17,4 +17,6 @@ public interface DiaChiRepository extends JpaRepository<DiaChi, Long> {
 
     @Query("SELECT d FROM DiaChi d WHERE d.trangThai = :trangThai")
     Page<DiaChi> findByTrangThaiAllDiaChi(@Param("trangThai") Integer trangThai, Pageable pageable);
+
+    List<DiaChi> findByTaiKhoan_Id(Long taiKhoanId);
 }

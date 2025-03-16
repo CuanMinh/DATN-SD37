@@ -9,13 +9,22 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                         aria-label="Close"></button>
             </div>
-            <div th:fragment="modalContent" class="modal-body" id="modal-content">
+            <div th:fragment="modalContent" class="modal-body" id="modal-content-sanpham">
                 <!-- Thêm hidden input chứa maHoaDon -->
                 <input type="hidden" id="maHoaDonHidden" th:value="${selectedHoaDon.maHoaDon}"/>
-                <p>Tìm kiếm</p>
-                <table class="table table-bordered mt-3">
-                    <thead>
-                    <tr class="text-center">
+                <!-- Thanh tìm kiếm theo tên hoặc mã sản phẩm -->
+                <div class="input-group input-group-sm mb-3" style="max-width: 300px;">
+                    <input type="text" class="form-control form-control-sm" id="searchSanPham"
+                           placeholder=" Nhập tên hoặc mã sản phẩm" aria-label="Tìm kiếm theo tên hoặc mã sản phẩm"
+                           aria-describedby="button-addon">
+                    <button class="btn btn-primary btn-sm" type="button" id="button-addon" onclick="searchSanPham()">Tìm
+                        kiếm
+                    </button>
+                </div>
+                <table class="table table-bordered table-hover mt-3"
+                       style="font-size: 14px; border-radius: 10px; overflow: hidden;">
+                    <thead class="table-primary text-center">
+                    <tr>
                         <th>STT</th>
                         <th>Hình ảnh</th>
                         <th>Thông tin</th>
@@ -28,38 +37,63 @@
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(chitietsanpham.content)}">
-                        <td colspan="8" class="text-center">Không có sản phẩm nào</td>
+                        <td colspan="8" class="text-center text-muted">Không có sản phẩm nào</td>
                     </tr>
-                    <tr th:each="item,iterStat : ${chitietsanpham.content}">
+                    <tr th:each="item,iterStat : ${chitietsanpham.content}" class="align-middle">
                         <td class="text-center"
-                            th:text="${iterStat.index + 1 + (chitietsanpham.number * chitietsanpham.size)}">1
+                            th:text="${iterStat.index + 1 + (chitietsanpham.number * chitietsanpham.size)}">
                         </td>
-                        <td class="text-center">Hình ảnh sp</td>
+                        <td class="text-center">
+                            <img th:if="${hinhAnh[item.id] != null}"
+                                 th:src="@{'/getproduct/' + ${hinhAnh[item.id].duongDan}}"
+                                 alt="Hình ảnh sản phẩm" class="rounded" width="80" height="80">
+                        </td>
                         <td class="text-wrap">
-                            <span><span class="fw-bold">Tên sản phẩm:</span> <span th:text="${item.sanPham.ten}"></span></span><br>
-                            <span><span class="fw-bold">Mã sản phẩm:</span> <span
-                                    th:text="${item.sanPham.ma}"></span></span><br>
-                            <!--                            <span><span class="fw-bold">Danh mục:</span> <span th:text="${item.sanPham.danhMuc.ten}"></span></span><br>-->
-                            <!--                            <span><span class="fw-bold">Chất liệu:</span> <span th:text="${item.sanPham.chatLieu.ten}"></span></span><br>-->
-                            <!--                            <span><span class="fw-bold">Thương hiệu:</span> <span th:text="${item.sanPham.thuongHieu.ten}"></span></span>-->
+                            <span class="fw-bold">Tên:</span> <span th:text="${item.sanPham.ten}"></span><br>
+                            <span class="fw-bold">Mã:</span> <span th:text="${item.sanPham.ma}"></span><br>
+                            <span class="fw-bold">Giá Giảm:</span>
+                            <span class="text-danger"
+                                  th:text="${item.giamGia != null ? #numbers.formatDecimal(item.giamGia, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}"></span>
+                            <br>
                         </td>
                         <td class="text-center" th:text="${item.mauSac.ten}"></td>
                         <td class="text-center" th:text="${item.kichCo.ten}"></td>
-                        <td class="text-center" th:text="${item.gia} + ' VND'"></td>
+                        <!-- Giá -->
+                        <td class="text-center">
+                            <!-- Nếu có giảm giá -->
+                            <div th:if="${item.giamGia != null}">
+                                <del class="text-muted">
+                                    <span th:text="${#numbers.formatDecimal(item.gia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                                </del>
+                                <br>
+                                <span class="fw-bold text-success"
+                                      th:text="${#numbers.formatDecimal(item.gia - item.giamGia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                            </div>
+
+                            <!-- Nếu không có giảm giá, chỉ hiển thị giá gốc -->
+                            <div th:if="${item.giamGia == null}"><span class="fw-bold text-success"
+                                                                       th:text="${#numbers.formatDecimal(item.gia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                            </div>
+                        </td>
                         <td class="text-center" th:text="${item.soLuong}"></td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-primary"
+                            <button type="button" class="btn btn-sm btn-primary"
                                     th:data-idchitietsanpham="${item.id}"
                                     th:data-idhoadon="${selectedHoaDon.id}"
                                     th:data-ten="${item.sanPham.ten}"
                                     th:data-mahoadon="${selectedHoaDon.maHoaDon}"
                                     onclick="showConfigModalDialog(this.getAttribute('data-idchitietsanpham'), this.getAttribute('data-idhoadon'), this.getAttribute('data-ten'), this.getAttribute('data-mahoadon'))">
-                                <span>Mua</span>
+                                <i class="fa fa-shopping-cart"></i> Mua
                             </button>
                         </td>
                     </tr>
                     </tbody>
                 </table>
+
+                <div th:unless="${chitietsanpham != null and not #lists.isEmpty(chitietsanpham.content)}"
+                     class="alert alert-warning text-center">
+                    Không có sản phẩm nào
+                </div>
                 <!-- Phân trang sản phẩm trong modal -->
                 <nav th:if="${chitietsanpham.totalPages >= 1}">
                     <ul class="pagination justify-content-center">

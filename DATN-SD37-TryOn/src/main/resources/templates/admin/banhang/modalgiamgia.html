@@ -23,38 +23,52 @@
                     <button class="btn btn-primary" type="button" onclick="searchGiamGia()">Tìm kiếm</button>
                 </div>
                 <div th:if="${listMaGiamGia != null and not #lists.isEmpty(listMaGiamGia.content)}">
-                    <table class="table table-bordered mt-3">
-                        <thead>
-                        <tr class="text-center">
+                    <table class="table table-bordered table-hover mt-3" style="font-size: 14px; border-radius: 10px; overflow: hidden;">
+                        <thead class="table-warning text-center">
+                        <tr>
                             <th>STT</th>
                             <th>Tên</th>
-                            <th>Loại Giảm giá</th>
-                            <th>Giá trị giảm giá</th>
+                            <th>Giá trị áp dụng</th>
+                            <th>Loại giảm giá</th>
+                            <th>Giá trị giảm</th>
                             <th>Số lượng</th>
                             <th>Chức năng</th>
                         </tr>
                         </thead>
                         <tbody>
-
-                        <tr th:each="itemM, iterStat : ${listMaGiamGia.content}">
-                            <td th:text="${iterStat.index + 1 + (listMaGiamGia.number * listMaGiamGia.size)}">1</td>
-                            <td th:text="${itemM.ten}"></td>
-                            <td th:text="${itemM.loaiGiamGia}"></td>
+                        <tr th:each="itemM, iterStat : ${listMaGiamGia.content}" class="align-middle">
                             <td class="text-center"
-                                th:text="${itemM.loaiGiamGia == 'Tiền mặt' ? itemM.giaTriGiamGia + ' VND' : itemM.giaTriGiamGia + ' %'}"></td>
-                            <td th:text="${itemM.soLuong}"></td>
+                                th:text="${iterStat.index + 1 + (listMaGiamGia.number * listMaGiamGia.size)}">
+                            </td>
+                            <td class="fw-bold text-primary" th:text="${itemM.ten}"></td>
+                            <td class="text-center text-success"
+                                th:text="${#numbers.formatDecimal(itemM.giaTriGiamGiaToiDa, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                            </td>
+                            <td class="text-center" th:text="${itemM.loaiGiamGia}"></td>
+                            <td class="text-center">
+                    <span th:if="${itemM.loaiGiamGia == 'Tiền mặt'}"
+                          th:text="${#numbers.formatDecimal(itemM.giaTriGiamGia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                    </span>
+                                <span th:unless="${itemM.loaiGiamGia == 'Tiền mặt'}"
+                                      th:text="${#numbers.formatDecimal(itemM.giaTriGiamGia, 0, 'NONE', 0, 'POINT')} + ' %'">
+                    </span>
+                            </td>
+                            <td class="text-center fw-bold text-danger" th:text="${itemM.soLuong}"></td>
                             <td class="text-center">
                                 <form th:action="@{/admin/banhang/addgimagia}" method="post">
                                     <input type="hidden" name="idhoadon" th:value="${selectedHoaDon.id}"/>
                                     <input type="hidden" name="idMaGiamGia" th:value="${itemM.id}"/>
                                     <input type="hidden" name="maHoaDon" th:value="${selectedHoaDon.maHoaDon}"/>
-                                    <button type="submit" class="btn btn-primary">Áp Dụng</button>
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fa fa-check"></i> Áp Dụng
+                                    </button>
                                 </form>
                             </td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+
                 <div th:unless="${listMaGiamGia != null and not #lists.isEmpty(listMaGiamGia.content)}"
                      class="alert alert-warning text-center">
                     Không có mã giảm giá nào

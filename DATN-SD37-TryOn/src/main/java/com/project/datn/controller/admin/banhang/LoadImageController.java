@@ -1,6 +1,7 @@
 package com.project.datn.controller.admin.banhang;
 
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,7 +19,7 @@ public class LoadImageController {
 
 	@RequestMapping(value = "getbill/{photo}", method = RequestMethod.GET)
 	@ResponseBody
-	public ResponseEntity<ByteArrayResource> getProduct(@PathVariable("photo") String photo) {
+	public ResponseEntity<ByteArrayResource> getBill(@PathVariable("photo") String photo) {
 		if (!photo.equals("") || photo != null) {
 			try {
 				Path filename = Paths.get("uploads/bill", photo);
@@ -32,5 +33,33 @@ public class LoadImageController {
 		}
 		return ResponseEntity.badRequest().build();
 	}
+
+	@RequestMapping(value = "getproduct/{photo}", method = RequestMethod.GET)
+	@ResponseBody
+	public ResponseEntity<ByteArrayResource> getProduct(@PathVariable("photo") String photo) {
+		if (photo != null && !photo.isEmpty()) { // Sửa lại điều kiện kiểm tra
+			try {
+				Path filename = Paths.get("uploads/products", photo);
+
+				// Kiểm tra xem file có tồn tại không trước khi đọc
+				if (!Files.exists(filename)) {
+					return ResponseEntity.notFound().build();
+				}
+
+				byte[] buffer = Files.readAllBytes(filename);
+				ByteArrayResource byteArrayResource = new ByteArrayResource(buffer);
+
+				return ResponseEntity.ok()
+						.contentLength(buffer.length)
+						.contentType(MediaType.IMAGE_PNG) // Tự động lấy kiểu ảnh
+						.body(byteArrayResource);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			}
+		}
+		return ResponseEntity.badRequest().build();
+	}
+
 
 }

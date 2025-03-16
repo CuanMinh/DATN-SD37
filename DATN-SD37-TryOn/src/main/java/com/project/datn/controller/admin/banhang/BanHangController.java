@@ -2,6 +2,7 @@ package com.project.datn.controller.admin.banhang;
 
 import com.project.datn.entity.ChiTietSanPham;
 import com.project.datn.entity.DiaChi;
+import com.project.datn.entity.HinhAnh;
 import com.project.datn.entity.HoaDon;
 import com.project.datn.entity.HoaDonChiTiet;
 import com.project.datn.entity.MaGiamGia;
@@ -11,6 +12,7 @@ import com.project.datn.model.request.banhang.HoaDonChiTietRequest;
 import com.project.datn.model.request.banhang.HoaDonRequest;
 import com.project.datn.repository.ChiTietSanPhamRepository;
 import com.project.datn.repository.DiaChiRepository;
+import com.project.datn.repository.HinhAnhRepository;
 import com.project.datn.repository.HoaDonChiTietRepository;
 import com.project.datn.repository.HoaDonRepository;
 import com.project.datn.repository.MaGiamGiaRepository;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -40,10 +43,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/banhang")
@@ -73,6 +81,9 @@ public class BanHangController {
 
     @Autowired
     DiaChiRepository diaChiRepository;
+
+    @Autowired
+    HinhAnhRepository hinhAnhRepository;
 
 
     @RequestMapping("")
@@ -118,24 +129,45 @@ public class BanHangController {
 
         // mã giảm giá
         Pageable pageableGiamGia = PageRequest.of(0, 1);
-        Page<MaGiamGia> listMaGiamGia = maGiamGiaRepository.findByTrangThaiAllMaGiamGia(1,pageableGiamGia);
+        Page<MaGiamGia> listMaGiamGia = maGiamGiaRepository.findByTrangThaiAllMaGiamGia(1, pageableGiamGia);
         model.addAttribute("listMaGiamGia", listMaGiamGia);
 
         // địa chỉ
         Pageable pageableDiaChi = PageRequest.of(0, 1);
-        Page<DiaChi> listDiaChi = diaChiRepository.findByTrangThaiAllDiaChi(1,pageableDiaChi);
+        Page<DiaChi> listDiaChi = diaChiRepository.findByTrangThaiAllDiaChi(1, pageableDiaChi);
         model.addAttribute("listDiaChi", listDiaChi);
 
         // chi tiết sản phẩm
-        Pageable pageableSanPham = PageRequest.of(0, 1);
-        Page<ChiTietSanPham> list = chiTietSanPhamRepository.findByTrangThai(1,pageableSanPham);
+        Pageable pageableSanPham = PageRequest.of(0, 3);
+        Page<ChiTietSanPham> list = chiTietSanPhamRepository.findByTrangThai(1, pageableSanPham);
         model.addAttribute("chitietsanpham", list);
+
+        // Lấy danh sách hình ảnh theo id của từng ProductDetail nhưng chỉ lấy 1 ảnh duy nhất
+        Map<Long, HinhAnh> hinhAnh = list.getContent().stream()
+                .collect(Collectors.toMap(
+                        productDetail -> productDetail.getId(), // Key: productDetailId
+                        productDetail -> hinhAnhRepository.findTop1BySanPham_Id(productDetail.getSanPham().getId())
+                                .stream().findFirst().orElse(null), // Lấy ảnh đầu tiên
+                        (existing, replacement) -> existing // Nếu có trùng key thì giữ nguyên
+                ));
+        model.addAttribute("hinhAnh", hinhAnh);
 
         // hoá đơn
         Optional<HoaDon> listHoaDon = hoaDonRepository.findByHoaDonMaHoaDon(maHoaDon);
         Pageable pageableGioHang = PageRequest.of(page, 3);
-        Page<HoaDonChiTiet> listHoaDonChiTiet = hoaDonChiTietRepository.findByHoaDonId(listHoaDon.get().getId(),pageableGioHang);
+        Page<HoaDonChiTiet> listHoaDonChiTiet = hoaDonChiTietRepository.findByHoaDonId(listHoaDon.get().getId(), pageableGioHang);
         model.addAttribute("listHoaDonChiTiet", listHoaDonChiTiet);
+
+        // Lấy danh sách hình ảnh theo id của từng ProductDetail nhưng chỉ lấy 1 ảnh duy nhất
+        Map<Long, HinhAnh> hinhAnhMap = listHoaDonChiTiet.getContent().stream()
+                .collect(Collectors.toMap(
+                        hoaDonChiTiet -> hoaDonChiTiet.getChiTietSanPham().getId(), // Key: id của ChiTietSanPham
+                        hoaDonChiTiet -> hinhAnhRepository.findTop1BySanPham_Id(hoaDonChiTiet.getChiTietSanPham().getSanPham().getId())
+                                .stream().findFirst().orElse(null), // Lấy ảnh đầu tiên nếu có
+                        (existing, replacement) -> existing // Nếu có trùng key thì giữ nguyên ảnh cũ
+                ));
+
+        model.addAttribute("hinhAnhgiohang", hinhAnhMap);
 
         // tổng tiền
         List<HoaDonChiTiet> listHoaDonChiTietTT = hoaDonChiTietRepository.findByHoaDonAllId(listHoaDon.get().getId());
@@ -223,10 +255,27 @@ public class BanHangController {
         // Nếu đã có hóa đơn chi tiết cho sản phẩm này trong hóa đơn hiện tại, cập nhật
         Optional<HoaDonChiTiet> existingItem = hoaDonChiTietRepository.findByHoaDonIdAndChiTietSanPhamId(idhoadon, idchitietsanpham);
         if (existingItem.isPresent()) {
-//            int tongSoLuongMoi = existingItem.get().getSoLuong() + dto.getSoLuong();
-            int tongSoLuongMoi =  dto.getSoLuong();
-            // Vì ta đã kiểm tra tổng số lượng với tất cả hóa đơn chi tiết rồi nên cập nhật trực tiếp
+            int tongSoLuongMoi = existingItem.get().getSoLuong() + dto.getSoLuong();
+//            int tongSoLuongMoi = dto.getSoLuong();
             hoaDonChiTietService.updateHoaDonChiTiet(idhoadon, idchitietsanpham, tongSoLuongMoi);
+
+            Optional<HoaDon> optionalHoaDon = hoaDonRepository.findById(idhoadon);
+            HoaDon hoaDon = optionalHoaDon.get();
+            // Tính lại tổng tiền của hóa đơn sau khi xóa sản phẩm
+            List<HoaDonChiTiet> listHoaDonChiTiet2 = hoaDonChiTietRepository.findByHoaDonAllId(idhoadon);
+            double tongTien = listHoaDonChiTiet2.stream()
+                    .mapToDouble(item -> item.getGia().doubleValue() * item.getSoLuong())
+                    .sum();
+            // Kiểm tra nếu hóa đơn có mã giảm giá
+            if (hoaDon.getMaGiamGia() != null) {
+                BigDecimal giaTriGiamGia = hoaDon.getMaGiamGia().getGiaTriGiamGiaToiDa();
+                // So sánh giaTriGiamGia với tongTien (chuyển tongTien thành BigDecimal)
+                if (BigDecimal.valueOf(tongTien).compareTo(giaTriGiamGia) < 0) {
+                    // Xóa mã giảm giá khỏi hóa đơn
+                    hoaDon.setMaGiamGia(null);
+                    hoaDonRepository.save(hoaDon);
+                }
+            }
         } else {
             // Nếu chưa có sản phẩm nào trong giỏ của hóa đơn hiện tại, thêm mới vào giỏ hàng
             dto.setIdHoaDon(idhoadon);
@@ -237,6 +286,87 @@ public class BanHangController {
         redirectAttributes.addFlashAttribute("success", "Thêm sản phẩm vào giỏ hàng thành công!");
         return new ModelAndView("redirect:/admin/banhang/addgiohanghoadon?maHoaDon=" + maHoaDon);
     }
+    @PostMapping("/congsoluong/{id}")
+    public ModelAndView congSoLuongHoaDonChiTiet(HttpServletRequest request,
+                                                 @PathVariable("id") Long idHoaDonChiTiet,
+                                                 RedirectAttributes redirectAttributes) {
+        // Lấy URL trang trước từ header "Referer"
+        String referer = request.getHeader("Referer");
+        if (referer == null || referer.isEmpty()) {
+            referer = "/admin/banhang/banhang"; // fallback nếu không có referer
+        }
+
+        // Lấy chi tiết hóa đơn cần cập nhật
+        Optional<HoaDonChiTiet> optionalHoaDonChiTiet = hoaDonChiTietRepository.findById(idHoaDonChiTiet);
+        if (!optionalHoaDonChiTiet.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Chi tiết hóa đơn không tồn tại!");
+            return new ModelAndView("redirect:" + referer);
+        }
+        HoaDonChiTiet hoaDonChiTiet = optionalHoaDonChiTiet.get();
+
+        // Tăng số lượng lên 1
+        int newQuantity = hoaDonChiTiet.getSoLuong() + 1;
+        hoaDonChiTiet.setSoLuong(newQuantity);
+
+        // Lấy thông tin chi tiết sản phẩm từ repository
+        Optional<ChiTietSanPham> optionalChiTietSanPham = chiTietSanPhamRepository.findById(
+                hoaDonChiTiet.getChiTietSanPham().getId());
+        if (!optionalChiTietSanPham.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Chi tiết sản phẩm không tồn tại!");
+            return new ModelAndView("redirect:" + referer);
+        }
+        ChiTietSanPham chiTietSanPham = optionalChiTietSanPham.get();
+
+        // Lấy tất cả hóa đơn chi tiết của sản phẩm đó
+        List<HoaDonChiTiet> listHoaDonChiTiet = hoaDonChiTietRepository.findHoaDonChiTietByChiTietSanPhamId(
+                hoaDonChiTiet.getChiTietSanPham().getId());
+
+        // Tính tổng số lượng hiện có trong giỏ cho sản phẩm đó
+        int totalCartQuantity = listHoaDonChiTiet.stream().mapToInt(HoaDonChiTiet::getSoLuong).sum();
+
+        // Kiểm tra nếu tổng số lượng vượt quá số lượng tồn kho
+        if (totalCartQuantity > chiTietSanPham.getSoLuong()) {
+            redirectAttributes.addFlashAttribute("error", "Số lượng vượt quá số lượng sản phẩm trong kho! Sản phẩm: "
+                    + chiTietSanPham.getSanPham().getTen()
+                    + " - chỉ có số lượng: " + chiTietSanPham.getSoLuong()
+                    + " - số lượng còn lại: " + "0");
+            return new ModelAndView("redirect:" + referer);
+        } else {
+            hoaDonChiTietRepository.save(hoaDonChiTiet);
+        }
+        return new ModelAndView("redirect:" + referer);
+    }
+
+    @PostMapping("/trusoluong/{id}")
+    public ModelAndView truSoLuongHoaDonChiTiet(HttpServletRequest request,
+                                                @PathVariable("id") Long idHoaDonChiTiet,
+                                                RedirectAttributes redirectAttributes) {
+        // Lấy URL trang trước từ header "Referer"
+        String referer = request.getHeader("Referer");
+        if (referer == null || referer.isEmpty()) {
+            referer = "/admin/banhang/banhang"; // fallback nếu không có referer
+        }
+
+        // Lấy chi tiết hóa đơn cần cập nhật
+        Optional<HoaDonChiTiet> optionalHoaDonChiTiet = hoaDonChiTietRepository.findById(idHoaDonChiTiet);
+        if (!optionalHoaDonChiTiet.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Chi tiết hóa đơn không tồn tại!");
+            return new ModelAndView("redirect:" + referer);
+        }
+        HoaDonChiTiet hoaDonChiTiet = optionalHoaDonChiTiet.get();
+
+        // Nếu số lượng > 1, trừ đi 1 và cập nhật
+        if (hoaDonChiTiet.getSoLuong() > 1) {
+            hoaDonChiTiet.setSoLuong(hoaDonChiTiet.getSoLuong() - 1);
+            hoaDonChiTietRepository.save(hoaDonChiTiet);
+        } else {
+            // Nếu số lượng bằng 1, sau khi trừ sẽ bằng 0 nên xoá luôn chi tiết hóa đơn
+            hoaDonChiTietService.deleteHoaDonChiTiet(idHoaDonChiTiet);
+            redirectAttributes.addFlashAttribute("success", "Sản phẩm đã bị xoá khỏi giỏ hàng do số lượng đạt 0!");
+        }
+        return new ModelAndView("redirect:" + referer);
+    }
+
 
     @PostMapping("/addgimagia")
     public ModelAndView thanhToanHoaDon(HttpServletRequest request, RedirectAttributes redirectAttributes,
@@ -272,10 +402,11 @@ public class BanHangController {
                     if (!optMaGiamGia.isPresent()) {
                         redirectAttributes.addFlashAttribute("error", "Mã giảm giá không tồn tại.");
                     } else {
-                        BigDecimal discountValue = optMaGiamGia.get().getGiaTriGiamGia();
-                        // So sánh discountValue với tổng tiền (chuyển tongTien thành BigDecimal)
-                        if (discountValue.compareTo(BigDecimal.valueOf(tongTien)) > 0) {
-                            redirectAttributes.addFlashAttribute("error", "Mã giảm giá này lớn hơn tổng tiền cần thanh toán.");
+                        BigDecimal discountValue = optMaGiamGia.get().getGiaTriGiamGiaToiDa();
+                        NumberFormat numberFormat = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+                        String formattedDiscountValue = numberFormat.format(discountValue) + " VND";
+                        if (BigDecimal.valueOf(tongTien).compareTo(discountValue) < 0) {
+                            redirectAttributes.addFlashAttribute("error", "Mã giảm giá này chỉ áp dụng cho hoá đơn trên:" + formattedDiscountValue);
                         } else {
                             hoaDonService.addGiamgia(idhoadon, idMaGiamGia);
                             redirectAttributes.addFlashAttribute("success", "Mã giảm giá đã được áp dụng thành công!");
@@ -399,7 +530,7 @@ public class BanHangController {
             hoaDon.setNgayCapNhap(new Date());
             hoaDon.setNgayThanhToan(new Date());
             hoaDon.setTrangThaiThanhToan(1);
-            hoaDon.setTrangThai(4);
+            hoaDon.setTrangThai(5);
             hoaDonRepository.save(hoaDon);
             for (HoaDonChiTiet hoaDonChiTiet : hoaDonChiTiets) {
                 Optional<ChiTietSanPham> optionalChiTietSanPham = chiTietSanPhamRepository.findById(hoaDonChiTiet.getChiTietSanPham().getId());
@@ -412,7 +543,7 @@ public class BanHangController {
             if (optionalMaGiamGia.isPresent()) {
                 MaGiamGia maGiamGia = optionalMaGiamGia.get();
                 maGiamGia.setSoLuong(maGiamGia.getSoLuong() - 1);
-                maGiamGia.setNgayCapNhap(new Date());
+//                maGiamGia.setNgayCapNhap(new Date());
                 maGiamGiaRepository.save(maGiamGia);
             }
             redirectAttributes.addFlashAttribute("success", "Thanh toán thành công!");
@@ -473,6 +604,7 @@ public class BanHangController {
         }
     }
 
+
     @PostMapping("/delete/{id}")
     public ModelAndView deleteHoaDonChiTiet(HttpServletRequest request,
                                             @PathVariable("id") Long idHoaDonChiTiet,
@@ -508,13 +640,13 @@ public class BanHangController {
 
             // Kiểm tra nếu hóa đơn có mã giảm giá
             if (hoaDon.getMaGiamGia() != null) {
-                BigDecimal giaTriGiamGia = hoaDon.getMaGiamGia().getGiaTriGiamGia();
+                BigDecimal giaTriGiamGia = hoaDon.getMaGiamGia().getGiaTriGiamGiaToiDa();
                 // So sánh giaTriGiamGia với tongTien (chuyển tongTien thành BigDecimal)
-                if (giaTriGiamGia.compareTo(BigDecimal.valueOf(tongTien)) > 0) {
+                if (BigDecimal.valueOf(tongTien).compareTo(giaTriGiamGia) < 0) {
                     // Xóa mã giảm giá khỏi hóa đơn
                     hoaDon.setMaGiamGia(null);
                     hoaDonRepository.save(hoaDon);
-                    redirectAttributes.addFlashAttribute("success", "Đã xóa mã giảm giá vì giá trị giảm giá lớn hơn tổng tiền!");
+                    redirectAttributes.addFlashAttribute("success", "Xóa sản phẩm thành công!");
                 }
             }
         }
@@ -527,19 +659,76 @@ public class BanHangController {
         return new ModelAndView("redirect:" + referer);
     }
 
+    //    @PostMapping("/addthongtinkhachhangmoi")
+//    public ModelAndView addThongTinKhachHangmoi(HttpServletRequest request,
+//                                                @Valid @ModelAttribute("diachirq") DiaChiRequest dto,
+//                                                BindingResult bindingResult,
+//                                                RedirectAttributes redirectAttributes,
+//                                                @RequestParam("idhoadon") Long idHoaDon) throws IOException {
+//
+//        // Kiểm tra nếu tên rỗng (dù đã dùng @NotBlank ở DTO, ta kiểm tra thêm ở đây nếu cần)
+//        if (dto.getTen() == null || dto.getTen().trim().isEmpty()) {
+//            bindingResult.rejectValue("ten", "error.ten", "Tên không được để trống.");
+//        }
+//
+//        // Kiểm tra số điện thoại: không được rỗng và phải đúng 10 chữ số bắt đầu bằng 0
+//        if (dto.getSoDienThoai() == null || !dto.getSoDienThoai().matches("^0\\d{9}$")) {
+//            bindingResult.rejectValue("soDienThoai", "error.soDienThoai",
+//                    "Số điện thoại phải đúng 10 chữ số và bắt đầu bằng số 0.");
+//        }
+//
+//        // Nếu có lỗi validation, trả về lại form và hiển thị lỗi
+//        if (bindingResult.hasErrors()) {
+//            ModelMap model = new ModelMap();
+//            model.addAttribute("idhoadons", idHoaDon);
+//            model.addAttribute("diachirq", dto);
+//            return new ModelAndView("admin/banhang/banhang :: modalFragment", model);
+//        }
+//
+//        diaChiService.addiaChi(idHoaDon, dto);
+//        String referer = request.getHeader("Referer");
+//        if (referer == null || referer.isEmpty()) {
+//            referer = "/admin/banhang/banhang"; // fallback nếu không có referer
+//        }
+//        redirectAttributes.addFlashAttribute("success", "Bạn đã thêm thông tin khách hàng mới thành công!");
+//        return new ModelAndView("redirect:" + referer);
+//    }
     @PostMapping("/addthongtinkhachhangmoi")
-    public ModelAndView addThongTinKhachHangmoi(HttpServletRequest request, RedirectAttributes redirectAttributes, @Valid @ModelAttribute("diachirq") DiaChiRequest dto,
-                                                @RequestParam("idhoadon") Long idHoaDon) throws IOException {
+    public ResponseEntity<Map<String, Object>> addThongTinKhachHangmoi(
+            @Valid @ModelAttribute("diachirq") DiaChiRequest dto,
+            BindingResult bindingResult,
+            @RequestParam("idhoadon") Long idHoaDon,
+            HttpServletRequest request) {
 
+        Map<String, Object> response = new HashMap<>();
+
+        // Kiểm tra lỗi validation
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage())
+            );
+            response.put("status", "error");
+            response.put("errors", errors);
+            return ResponseEntity.ok(response);
+        }
+
+        // Xử lý khi không có lỗi
         diaChiService.addiaChi(idHoaDon, dto);
 
+        // Lấy trang trước đó (referer)
         String referer = request.getHeader("Referer");
         if (referer == null || referer.isEmpty()) {
-            referer = "/admin/banhang/banhang"; // fallback nếu không có referer
+            referer = "/admin/banhang/banhang"; // Fallback nếu không có referer
         }
-        redirectAttributes.addFlashAttribute("success", "Bạn đã thêm thông tin khách hàng mới thành công!");
-        return new ModelAndView("redirect:" + referer);
+
+        response.put("status", "success");
+        response.put("success", "Bạn đã thêm thông tin khách hàng mới thành công!");
+        response.put("redirect", referer); // Chuyển hướng trang
+
+        return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/addthongtinkhachhangcu")
     public ModelAndView addThongTinKhachHangcu(HttpServletRequest request, RedirectAttributes redirectAttributes,
@@ -586,11 +775,11 @@ public class BanHangController {
         }
         return new ModelAndView("redirect:" + referer);
     }
+
     @GetMapping("/sanpham-modal")
     public ModelAndView loadSanPhamModal(@RequestParam("maHoaDon") String maHoaDon,
                                          @RequestParam(value = "pageSanPham", defaultValue = "0") int pageSanPham,
                                          ModelMap model) {
-        System.out.println("Controller /sanpham-modal được gọi với pageSanPham: " + pageSanPham + ", maHoaDon: " + maHoaDon);
         Optional<HoaDon> hoaDonOpt = hoaDonRepository.findByHoaDonMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             model.addAttribute("error", "Hóa đơn không tồn tại");
@@ -599,19 +788,27 @@ public class BanHangController {
         HoaDon hoaDon = hoaDonOpt.get();
         model.addAttribute("selectedHoaDon", hoaDon);
 
-        Pageable pageable = PageRequest.of(pageSanPham, 1); // 5 sản phẩm mỗi trang
-        Page<ChiTietSanPham> sanPhamPage = chiTietSanPhamRepository.findByTrangThai(1,pageable);
-        System.out.println("Số lượng sản phẩm trên trang " + pageSanPham + ": " + sanPhamPage.getContent().size() +
-                ", Total pages: " + sanPhamPage.getTotalPages() +
-                ", Total elements: " + sanPhamPage.getTotalElements());
+        Pageable pageable = PageRequest.of(pageSanPham, 3); // 5 sản phẩm mỗi trang
+        Page<ChiTietSanPham> sanPhamPage = chiTietSanPhamRepository.findByTrangThai(1, pageable);
+
+        // Lấy danh sách hình ảnh theo id của từng ProductDetail nhưng chỉ lấy 1 ảnh duy nhất
+        Map<Long, HinhAnh> hinhAnh = sanPhamPage.getContent().stream()
+                .collect(Collectors.toMap(
+                        productDetail -> productDetail.getId(), // Key: productDetailId
+                        productDetail -> hinhAnhRepository.findTop1BySanPham_Id(productDetail.getSanPham().getId())
+                                .stream().findFirst().orElse(null), // Lấy ảnh đầu tiên
+                        (existing, replacement) -> existing // Nếu có trùng key thì giữ nguyên
+                ));
+        model.addAttribute("hinhAnh", hinhAnh);
+
         model.addAttribute("chitietsanpham", sanPhamPage);
         return new ModelAndView("admin/banhang/modalsanpham :: modalContent", model);
     }
+
     @GetMapping("/giamgia-modal")
     public ModelAndView loadGiamGiaModal(@RequestParam("maHoaDon") String maHoaDon,
                                          @RequestParam(value = "pageGiamGia", defaultValue = "0") int pageGiamGia,
                                          ModelMap model) {
-        System.out.println("Controller /giamgia-modal được gọi với pageGiamGia: " + pageGiamGia + ", maHoaDon: " + maHoaDon);
         Optional<HoaDon> hoaDonOpt = hoaDonRepository.findByHoaDonMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             model.addAttribute("error", "Hóa đơn không tồn tại");
@@ -622,10 +819,7 @@ public class BanHangController {
         model.addAttribute("selectedHoaDon", hoaDon);
 
         Pageable pageableGiamGia = PageRequest.of(pageGiamGia, 1);
-        Page<MaGiamGia> giamgiaPage = maGiamGiaRepository.findByTrangThaiAllMaGiamGia(1,pageableGiamGia);
-        System.out.println("Số lượng mã giảm giá trên trang " + pageGiamGia + ": " + giamgiaPage.getContent().size() +
-                ", Total pages: " + giamgiaPage.getTotalPages() +
-                ", Total elements: " + giamgiaPage.getTotalElements());
+        Page<MaGiamGia> giamgiaPage = maGiamGiaRepository.findByTrangThaiAllMaGiamGia(1, pageableGiamGia);
         model.addAttribute("listMaGiamGia", giamgiaPage);
         return new ModelAndView("admin/banhang/modalgiamgia :: modalContent", model);
     }
@@ -634,7 +828,6 @@ public class BanHangController {
     public ModelAndView loadkhachhangModal(@RequestParam("maHoaDon") String maHoaDon,
                                            @RequestParam(value = "pageKhachHang", defaultValue = "0") int pageKhachHang,
                                            ModelMap model) {
-        System.out.println("Controller /khachhangmodal được gọi với pageKhachHang: " + pageKhachHang + ", maHoaDon: " + maHoaDon);
         Optional<HoaDon> hoaDonOpt = hoaDonRepository.findByHoaDonMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             model.addAttribute("error", "Hóa đơn không tồn tại");
@@ -645,23 +838,20 @@ public class BanHangController {
 
         // Sử dụng biến pageKhachHang để phân trang (2 địa chỉ mỗi trang)
         Pageable pageableDiaChi = PageRequest.of(pageKhachHang, 1); // Đặt page size giống sản phẩm (2)
-        Page<DiaChi> listDiaChi = diaChiRepository.findByTrangThaiAllDiaChi(1,pageableDiaChi);
+        Page<DiaChi> listDiaChi = diaChiRepository.findByTrangThaiAllDiaChi(1, pageableDiaChi);
         // Đảm bảo luôn trả về Page, kể cả khi rỗng
         if (listDiaChi == null) {
             listDiaChi = new PageImpl<>(new ArrayList<>(), pageableDiaChi, 0);
         }
-        System.out.println("Số lượng địa chỉ trên trang " + pageKhachHang + ": " + listDiaChi.getContent().size() +
-                ", Total pages: " + listDiaChi.getTotalPages() +
-                ", Total elements: " + listDiaChi.getTotalElements());
         model.addAttribute("listDiaChi", listDiaChi);
         return new ModelAndView("admin/banhang/modalkhachhang :: modalContent", model);
     }
+
     @GetMapping("/giamgia-modal/search")
     public ModelAndView searchGiamGiaModal(@RequestParam("maHoaDon") String maHoaDon,
                                            @RequestParam("ten") String ten,
                                            @RequestParam(value = "pageGiamGia", defaultValue = "0") int pageGiamGia,
                                            ModelMap model) {
-        System.out.println("Controller /giamgia-modal/search được gọi với pageGiamGia: " + pageGiamGia + ", maHoaDon: " + maHoaDon + ", ten: " + ten);
         Optional<HoaDon> hoaDonOpt = hoaDonRepository.findByHoaDonMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             model.addAttribute("error", "Hóa đơn không tồn tại");
@@ -671,7 +861,7 @@ public class BanHangController {
         model.addAttribute("selectedHoaDon", hoaDon);
 
         Pageable pageableGiamGia = PageRequest.of(pageGiamGia, 1); // 2 mã giảm giá mỗi trang
-        List<MaGiamGia> giamGiaList = maGiamGiaRepository.findByTrangThaiAndTenContainingIgnoreCase(1,ten); // Tìm kiếm theo tên, không phân biệt hoa thường
+        List<MaGiamGia> giamGiaList = maGiamGiaRepository.findByTrangThaiAndTenContainingIgnoreCase(1, ten); // Tìm kiếm theo tên, không phân biệt hoa thường
         int start = (int) pageableGiamGia.getOffset();
         int end = Math.min((start + pageableGiamGia.getPageSize()), giamGiaList.size());
         Page<MaGiamGia> giamgiaPage = new PageImpl<>(giamGiaList.subList(start, end), pageableGiamGia, giamGiaList.size());
@@ -679,18 +869,15 @@ public class BanHangController {
         if (giamgiaPage == null || giamgiaPage.getContent().isEmpty()) {
             giamgiaPage = new PageImpl<>(new ArrayList<>(), pageableGiamGia, 0);
         }
-        System.out.println("Số lượng mã giảm giá tìm thấy trên trang " + pageGiamGia + ": " + giamgiaPage.getContent().size() +
-                ", Total pages: " + giamgiaPage.getTotalPages() +
-                ", Total elements: " + giamgiaPage.getTotalElements());
         model.addAttribute("listMaGiamGia", giamgiaPage);
         return new ModelAndView("admin/banhang/modalgiamgia :: modalContent", model);
     }
+
     @GetMapping("/khachhangmodal/search")
     public ModelAndView searchDiaChiModal(@RequestParam("maHoaDon") String maHoaDon,
                                           @RequestParam("query") String query,
                                           @RequestParam(value = "pageKhachHang", defaultValue = "0") int pageKhachHang,
                                           ModelMap model) {
-        System.out.println("Controller /khachhangmodal/search được gọi với pageKhachHang: " + pageKhachHang + ", maHoaDon: " + maHoaDon + ", query: " + query);
         Optional<HoaDon> hoaDonOpt = hoaDonRepository.findByHoaDonMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             model.addAttribute("error", "Hóa đơn không tồn tại");
@@ -708,11 +895,43 @@ public class BanHangController {
         if (diaChiPage == null || diaChiPage.getContent().isEmpty()) {
             diaChiPage = new PageImpl<>(new ArrayList<>(), pageableDiaChi, 0);
         }
-        System.out.println("Số lượng địa chỉ tìm thấy trên trang " + pageKhachHang + ": " + diaChiPage.getContent().size() +
-                ", Total pages: " + diaChiPage.getTotalPages() +
-                ", Total elements: " + diaChiPage.getTotalElements());
         model.addAttribute("listDiaChi", diaChiPage);
         return new ModelAndView("admin/banhang/modalkhachhang :: modalContent", model);
+    }
+
+    @GetMapping("/sanpham-modal/search")
+    public ModelAndView searchSanPhamModal(@RequestParam("maHoaDon") String maHoaDon,
+                                           @RequestParam("query") String query,
+                                           @RequestParam(value = "pageSanPham", defaultValue = "0") int pageSanPham,
+                                           ModelMap model) {
+        Optional<HoaDon> hoaDonOpt = hoaDonRepository.findByHoaDonMaHoaDon(maHoaDon);
+        if (!hoaDonOpt.isPresent()) {
+            model.addAttribute("error", "Hóa đơn không tồn tại");
+            return new ModelAndView("admin/banhang/modalsanpham :: modalError", model);
+        }
+        HoaDon hoaDon = hoaDonOpt.get();
+        model.addAttribute("selectedHoaDon", hoaDon);
+
+        Pageable pageable = PageRequest.of(pageSanPham, 3); // 1 sản phẩm mỗi trang (giữ nguyên như hiện tại)
+        List<ChiTietSanPham> chiTietSanPhamList = chiTietSanPhamRepository.findByTrangThaiAndSanPhamTenOrMaContainingIgnoreCase(query);
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), chiTietSanPhamList.size());
+        Page<ChiTietSanPham> sanPhamPage = new PageImpl<>(chiTietSanPhamList.subList(start, end), pageable, chiTietSanPhamList.size());
+
+        if (sanPhamPage == null || sanPhamPage.getContent().isEmpty()) {
+            sanPhamPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+        }
+        // Lấy danh sách hình ảnh theo id của từng ProductDetail nhưng chỉ lấy 1 ảnh duy nhất
+        Map<Long, HinhAnh> hinhAnh = sanPhamPage.getContent().stream()
+                .collect(Collectors.toMap(
+                        productDetail -> productDetail.getId(), // Key: productDetailId
+                        productDetail -> hinhAnhRepository.findTop1BySanPham_Id(productDetail.getSanPham().getId())
+                                .stream().findFirst().orElse(null), // Lấy ảnh đầu tiên
+                        (existing, replacement) -> existing // Nếu có trùng key thì giữ nguyên
+                ));
+        model.addAttribute("hinhAnh", hinhAnh);
+        model.addAttribute("chitietsanpham", sanPhamPage);
+        return new ModelAndView("admin/banhang/modalsanpham :: modalContent", model);
     }
 }
 

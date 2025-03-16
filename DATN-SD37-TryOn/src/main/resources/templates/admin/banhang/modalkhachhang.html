@@ -22,37 +22,42 @@
                 </div>
                 <!-- Mục thông tin khách hàng cũ -->
                 <div th:if="${listDiaChi != null and not #lists.isEmpty(listDiaChi.content)}">
-                <table class="table table-bordered mt-3">
-                    <thead>
-                    <tr class="text-center">
-                        <th>STT</th>
-                        <th>Tên</th>
-                        <th>Số điện thoại</th>
-                        <th>Thành phố</th>
-                        <th>Quận/Huyện</th>
-                        <th>Phường/Xã</th>
-                        <th>Chức năng</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="itemD, iterStat : ${listDiaChi.content}">
-                        <td th:text="${iterStat.index + 1 + (listDiaChi.number * listDiaChi.size)}">1</td>
-                        <td th:text="${itemD.ten}"></td>
-                        <td th:text="${itemD.soDienThoai}"></td>
-                        <td th:text="${itemD.thanhPho}"></td>
-                        <td th:text="${itemD.quanHuyen}"></td>
-                        <td th:text="${itemD.phuongXa}"></td>
-                        <td class="text-center">
-                            <form th:action="@{/admin/banhang/addthongtinkhachhangcu}" method="post">
-                                <input type="hidden" name="idhoadon" th:value="${selectedHoaDon != null ? selectedHoaDon.id : ''}"/>
-                                <input type="hidden" name="idDiachi" th:value="${itemD.id}"/>
-                                <button type="submit" class="btn btn-primary">Thêm</button>
-                            </form>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                    <table class="table table-bordered table-hover mt-3" style="font-size: 14px; border-radius: 10px; overflow: hidden;">
+                        <thead class="table-success text-center">
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Số điện thoại</th>
+                            <th>Thành phố</th>
+                            <th>Quận/Huyện</th>
+                            <th>Phường/Xã</th>
+                            <th>Chức năng</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="itemD, iterStat : ${listDiaChi.content}" class="align-middle">
+                            <td class="text-center"
+                                th:text="${iterStat.index + 1 + (listDiaChi.number * listDiaChi.size)}">
+                            </td>
+                            <td th:text="${itemD.ten}"></td>
+                            <td th:text="${itemD.soDienThoai}"></td>
+                            <td th:text="${itemD.thanhPho}"></td>
+                            <td th:text="${itemD.quanHuyen}"></td>
+                            <td th:text="${itemD.phuongXa}"></td>
+                            <td class="text-center">
+                                <form th:action="@{/admin/banhang/addthongtinkhachhangcu}" method="post">
+                                    <input type="hidden" name="idhoadon" th:value="${selectedHoaDon != null ? selectedHoaDon.id : ''}"/>
+                                    <input type="hidden" name="idDiachi" th:value="${itemD.id}"/>
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fa fa-plus"></i> Thêm
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
+
                 <div th:unless="${listDiaChi != null and not #lists.isEmpty(listDiaChi.content)}" class="alert alert-warning text-center">
                     Không có khách hàng nào
                 </div>
