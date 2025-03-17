@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/index.html}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sửa mã giảm giá</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+<div layout:fragment="content" class="col-lg-10 my-4">
+    <h2>Chỉnh sửa Mã Giảm Giá</h2>
+    <form action="/admin/giamgia/capnhat" method="post">
+        <input type="hidden" name="id" th:value="${mgg.id}">
+
+        <div class="form-group">
+            <label for="code">Mã giảm giá</label>
+            <input type="text" id="code" name="ten" class="form-control" th:value="${mgg.ten}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="discountType">Loại giảm giá</label>
+            <select id="discountType" name="loaiGiamGia" class="form-control">
+                <option value="phan_tram" th:selected="${mgg.loaiGiamGia eq 'phan_tram'}">Phần trăm</option>
+                <option value="tien_mat" th:selected="${mgg.loaiGiamGia eq 'tien_mat'}">Tiền mặt</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="discountValue">Giá trị giảm giá</label>
+            <input type="number" id="discountValue" name="giaTriGiamGia" class="form-control"
+                   th:value="${mgg.giaTriGiamGia}" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label for="minOrderValue">Giá trị tối thiểu của hóa đơn</label>
+            <input type="number" id="minOrderValue" name="giaTriGiamGiaToiDa" class="form-control"
+                   th:value="${mgg.giaTriGiamGiaToiDa}" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label for="startDate">Ngày bắt đầu</label>
+            <input type="date" id="startDate" name="ngayBatDau" class="form-control"
+                   th:value="${#dates.format(mgg.ngayBatDau, 'yyyy-MM-dd')}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="endDate">Ngày kết thúc</label>
+            <input type="date" id="endDate" name="ngayKetThuc" class="form-control"
+                   th:value="${#dates.format(mgg.ngayKetThuc, 'yyyy-MM-dd')}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Số lượng</label>
+            <input type="number" id="quantity" name="soLuong" class="form-control"
+                   th:value="${mgg.soLuong}" min="1" required>
+        </div>
+
+        <div class="form-group">
+            <label>Trạng thái</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" id="active" name="trangThai" value="1" th:checked="${mgg.trangThai == null or mgg.trangThai == 1}">
+                <label class="form-check-label" for="active">Hoạt động</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" id="inactive" name="trangThai" value="0" th:checked="${mgg.trangThai == 0}">
+                <label class="form-check-label" for="inactive">Không hoạt động</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success mt-3">Lưu</button>
+        <a href="/admin/giamgia" class="btn btn-secondary mt-3">Quay lại</a>
+    </form>
+</div>
+</body>
+</html>
