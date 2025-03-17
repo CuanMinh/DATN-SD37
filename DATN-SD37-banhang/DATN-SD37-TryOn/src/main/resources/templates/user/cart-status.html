@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đơn hàng</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+<div th:replace="user/fragments/nav::nav"></div>
+
+<div class="container py-4">
+    <h2 class="text-center mb-4">Danh sách đơn hàng</h2>
+
+    <!-- Tab items -->
+    <ul class="nav nav-tabs mb-3" id="orderTabs">
+        <li class="nav-item">
+            <a class="nav-link" href="?trangThai=">Tất cả</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="?trangThai=2">Chờ xác nhận</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="?trangThai=3">Chờ lấy hàng</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="?trangThai=4">Đang giao</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="?trangThai=5">Hoàn thành</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="?trangThai=0">Đã hủy</a>
+        </li>
+    </ul>
+
+
+    <!-- Orders Table -->
+    <div class="table-responsive">
+        <table id="orderTable" class="table table-striped table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>Mã ĐH</th>
+                <th>Ngày đặt</th>
+                <th>Tổng tiền</th>
+                <th>Thanh toán</th>
+                <th>Trạng thái</th>
+                <th>Chi tiết</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${bills.content.size() == 0}">
+                <td colspan="6" class="text-muted">Không có đơn hàng nào</td>
+            </tr>
+            <tr th:each="bill : *{bills.content}">
+                <td th:text="${bill.maHoaDon}"></td>
+                <td th:text="${#dates.format(bill.ngayTaoHoaDon, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${#numbers.formatDecimal(bill.tongTien, 0, 'POINT', 0, 'COMMA') + ' VND'}"></td>
+                <td th:text="${bill.phuongThucThanhToan.ten}"></td>
+                <td>
+                    <span th:class="'badge ' + ${bill.trangThai == 0 ? 'bg-danger' : bill.trangThai == 2 ? 'bg-warning' : bill.trangThai == 3 ? 'bg-info' : bill.trangThai == 4 ? 'bg-primary' : 'bg-success'}"
+                          th:text="${bill.trangThai == 0 ? 'Hủy' : bill.trangThai == 2 ? 'Chờ xác nhận' : bill.trangThai == 3 ? 'Chờ lấy hàng' : bill.trangThai == 4 ? 'Đang giao' : 'Hoàn thành'}"></span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                            th:attr="data-bs-target='#orderDetailModal' + ${bill.maHoaDon}">
+                        <i class="fa fa-eye"></i> Xem
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger"
+                            th:if="${bill.trangThai == 2 || bill.trangThai == 3}"
+                            th:attr="data-id=${bill.maHoaDon}"
+                            onclick="cancelOrder(this)">
+                        <i class="fa fa-times"></i> Hủy
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div th:each="bill : *{bills.content}" th:id="'orderDetailModal' + ${bill.maHoaDon}" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Chi tiết đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Địa chỉ giao hàng:</strong></p>
+                <p class="border rounded p-2 bg-light">
+                    <i class="fa fa-map-marker-alt text-danger"></i>
+                    <span th:text="${bill.diaChi.soDienThoai + ', ' + bill.diaChi.phuongXa + ', ' + bill.diaChi.quanHuyen + ', ' + bill.diaChi.thanhPho}"></span>
+                </p>
+
+                <table class="table table-bordered mt-3">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Màu</th>
+                        <th>Size</th>
+                        <th>SL</th>
+                        <th>Giá</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="billDetail : *{bill.billDetail}">
+                        <td th:text="${billDetail.chiTietSanPham.sanPham.ten}"></td>
+                        <td th:text="${billDetail.chiTietSanPham.mauSac.ten}"></td>
+                        <td th:text="${billDetail.chiTietSanPham.kichCo.ten}"></td>
+                        <td th:text="${billDetail.soLuong}"></td>
+                        <td class="text-success fw-bold"
+                            th:text="${#numbers.formatDecimal(billDetail.gia, 0, 'POINT', 0, 'COMMA')} + ' VND'">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div th:each="bill : *{bills.content}" th:id="'orderDetailModal' + ${bill.maHoaDon}" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Địa chỉ giao hàng:</strong> <span
+                        th:text="${bill.diaChi.soDienThoai + ', ' + bill.diaChi.phuongXa + ', ' + bill.diaChi.quanHuyen + ', ' + bill.diaChi.thanhPho}"></span>
+                </p>
+                <ul class="list-group">
+                    <li class="list-group-item" th:each="billDetail : *{bill.billDetail}">
+                        <span th:text="${billDetail.chiTietSanPham.sanPham.ten}"></span>
+                        - <span th:text="'Màu: ' + ${billDetail.chiTietSanPham.mauSac.ten}"></span>
+                        - <span th:text="'Size: ' + ${billDetail.chiTietSanPham.kichCo.ten}"></span>
+                        - <span th:text="'SL: ' + ${billDetail.soLuong}"></span>
+                        - <span class="text-success"
+                                th:text="${#numbers.formatDecimal(billDetail.gia, 0, 'POINT', 0, 'COMMA')} + ' VND'"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let urlParams = new URLSearchParams(window.location.search);
+        let trangThai = urlParams.get("trangThai") || ""; // Nếu null thì gán ""
+
+        document.querySelectorAll(".nav-link").forEach(link => {
+            let linkTrangThai = new URLSearchParams(link.getAttribute("href")).get("trangThai") || "";
+            if (trangThai === linkTrangThai) {
+                link.classList.add("active");
+            }
+        });
+    });
+    function cancelOrder(button) {
+        let orderId = button.getAttribute("data-id");
+
+        Swal.fire({
+            title: "Xác nhận hủy đơn?",
+            text: "Bạn có chắc chắn muốn hủy đơn hàng #" + orderId + " không?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Xác nhận",
+            cancelButtonText: "Hủy",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("/customer/trangthai/cancel/" + orderId, { method: "POST" })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: "Hủy đơn hàng thành công!",
+                                text: "Đơn hàng của bạn đã được hủy.",
+                                icon: "success",
+                                confirmButtonText: "OK",
+                            }).then(() => {
+                                location.reload(); // Tải lại trang sau khi nhấn OK
+                            });
+                        } else {
+                            Swal.fire({
+                                title: "Lỗi!",
+                                text: "Hủy đơn hàng thất bại: " + data.message,
+                                icon: "error",
+                                confirmButtonText: "OK",
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: "Lỗi hệ thống!",
+                            text: "Vui lòng thử lại sau.",
+                            icon: "error",
+                            confirmButtonText: "OK",
+                        });
+                    });
+            }
+        });
+    }
+
+</script>
+
+
+</body>
+</html>

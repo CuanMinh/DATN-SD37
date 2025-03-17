@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+        }
+        h1 {
+            color: #333;
+        }
+        .order-details {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .order-summary, .delivery-info {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        .btn {
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .btn-outline {
+            border: 2px solid #007bff;
+            color: #007bff;
+            transition: 0.3s;
+        }
+        .btn-outline:hover {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h1>Đặt hàng thành công!</h1>
+    <p>Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đã được xác nhận.</p>
+
+    <div th:if="${error}" style="color: red;">
+        <p th:text="${error}"></p>
+    </div>
+
+    <div class="order-details">
+        <div class="order-summary">
+            <h3>Thông tin đơn hàng</h3>
+            <div class="product-item" th:each="chiTiet : ${chiTietList}">
+                <span th:text="${chiTiet.chiTietSanPham.sanPham.ten} + '_' + ${chiTiet.chiTietSanPham.mauSac.ten} + '_' + ${chiTiet.chiTietSanPham.kichCo.ten} + '_x ' + ${chiTiet.soLuong}"></span>
+                <span th:text="${#numbers.formatDecimal(chiTiet.gia * chiTiet.soLuong, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+            </div>
+            <div class="product-item">
+                <span>Phí vận chuyển</span>
+                <span th:text="${#numbers.formatDecimal(phiVanChuyen, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+            </div>
+
+            <div class="product-item" th:if="${giaTriGiamGia != null and giaTriGiamGia > 0}">
+                <span>Giảm Giá</span>
+                <span th:text="${'-' + #numbers.formatDecimal(giaTriGiamGia, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+            </div>
+
+            <div class="total">
+                Tổng cộng: <span th:text="${#numbers.formatDecimal(tongTienCuoiCung, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+            </div>
+        </div>
+
+        <div class="delivery-info">
+            <h3>Thông tin giao hàng</h3>
+            <p><strong>Người nhận:</strong> <span th:text="${tenNguoiNhan}"></span></p>
+            <p><strong>Số điện thoại:</strong> <span th:text="${soDienThoai}"></span></p>
+            <p><strong>Địa chỉ:</strong> <span th:text="${diaChiGiaoHang}"></span></p>
+            <p><strong>ghi chú:</strong> <span th:text="${ghiChu}"></span></p>
+            <p><strong>Phương thức thanh toán:</strong> <span th:text="${phuongThucThanhToan}"></span></p>
+        </div>
+    </div>
+
+
+    <div class="buttons">
+        <a th:href="@{/home}" class="btn btn-outline">Tiếp tục mua sắm</a>
+        <a th:href="@{/customer/trangthai}" class="btn btn-primary" >Kiểm tra đơn hàng</a>
+    </div>
+</div>
+</body>
+</html>

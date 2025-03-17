@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Hóa Đơn</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="mb-4 text-center">Thêm Hóa Đơn Mới</h2>
+            <form th:action="@{/admin/hoadon/create}" th:object="${hoaDonDTO}" method="post" id="hoaDonForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="invoiceCode" class="form-label">Mã Hóa Đơn</label>
+                            <input type="text" class="form-control" id="invoiceCode" th:field="*{maHoaDon}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="totalAmount" class="form-label">Tổng Tiền</label>
+                            <input type="number" step="0.01" class="form-control" id="totalAmount" th:field="*{tongTien}" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="orderType" class="form-label">TT Đơn Hàng</label>
+                    <select class="form-control" id="orderType" th:field="*{trangThaiDonHang}" required>
+                        <option value="1">Online</option>
+                        <option value="0">Tại quầy</option>
+                    </select>
+                </div>
+
+
+                <h4>Danh sách sản phẩm</h4>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng tồn</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="sanPham : ${sanPhams}">
+                        <td th:text="${sanPham.id}"></td>
+                        <td th:text="${sanPham.sanPham != null ? sanPham.sanPham.ten : 'Chưa có tên sản phẩm'}"></td>
+                        <td th:text="${#numbers.formatDecimal(sanPham.gia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
+                        <td th:text="${sanPham.soLuong}"></td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-sm addSanPham"
+                                    th:data-id="${sanPham.id}"
+                                    th:data-ten="${sanPham.sanPham != null ? sanPham.sanPham.ten : 'Chưa có tên sản phẩm'}"
+                                    th:data-gia="${sanPham.gia}"
+                                    th:data-so-luong="${sanPham.soLuong}">Thêm</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <!-- Danh sách sản phẩm đã chọn -->
+                <h4>Sản phẩm đã chọn</h4>
+                <table class="table table-bordered" id="selectedSanPhamTable">
+                    <thead>
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Tổng</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody id="selectedSanPhamBody">
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <a href="/admin/hoadon" class="btn btn-secondary px-4">Quay lại</a>
+                    <button type="submit" class="btn btn-primary px-4">Thêm Hóa Đơn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let index = 0;
+
+    function updateTongTien() {
+        let tongTien = 0;
+        $("#selectedSanPhamBody tr").each(function() {
+            const gia = parseFloat($(this).find(".gia").data("gia"));
+            const soLuong = parseInt($(this).find(".soLuong").val());
+            if (!isNaN(gia) && !isNaN(soLuong)) {
+                tongTien += gia * soLuong;
+            }
+        });
+        $("#totalAmount").val(new Intl.NumberFormat('vi-VN').format(tongTien) + " VNĐ");
+        $("#hiddenTotalAmount").val(tongTien); // Cập nhật giá trị số cho server
+    }
+
+    $(document).ready(function() {
+        updateTongTien(); // Gọi khi load trang
+    }); 
+
+    $(".addSanPham").click(function() {
+        const sanPhamId = $(this).data("id");
+        const tenSanPham = $(this).data("ten");
+        const gia = $(this).data("gia");
+        const soLuongTon = $(this).data("so-luong");
+
+        if (soLuongTon <= 0) {
+            alert("Sản phẩm đã hết hàng!");
+            return;
+        }
+
+        const row = `
+        <tr>
+            <td>${tenSanPham}</td>
+            <td class="gia" data-gia="${gia}">${new Intl.NumberFormat('vi-VN').format(gia)} VNĐ</td>
+            <td>
+                <input type="number" class="form-control soLuong"
+                       name="sanPhams[${index}].soLuong" value="1" min="1" max="${soLuongTon}" required>
+                <input type="hidden" name="sanPhams[${index}].sanPhamId" value="${sanPhamId}">
+            </td>
+            <td class="tong">${new Intl.NumberFormat('vi-VN').format(gia)} VNĐ</td>
+            <td><button type="button" class="btn btn-danger btn-sm removeSanPham">Xóa</button></td>
+        </tr>`;
+        $("#selectedSanPhamBody").append(row);
+        index++;
+        updateTongTien();
+    });
+
+    $(document).on("click", ".removeSanPham", function() {
+        $(this).closest("tr").remove();
+        updateTongTien();
+    });
+
+    $(document).on("input", ".soLuong", function() {
+        const maxSoLuong = parseInt($(this).attr("max"));
+        let soLuong = parseInt($(this).val());
+        if (soLuong > maxSoLuong) {
+            $(this).val(maxSoLuong);
+            soLuong = maxSoLuong;
+            alert("Số lượng không được vượt quá tồn kho!");
+        }
+        const gia = parseFloat($(this).closest("tr").find(".gia").data("gia"));
+        const tong = gia * soLuong;
+        $(this).closest("tr").find(".tong").text(new Intl.NumberFormat('vi-VN').format(tong) + " VNĐ");
+        updateTongTien();
+    });
+</script>
+</body>
+</html>

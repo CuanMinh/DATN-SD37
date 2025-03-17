@@ -10,40 +10,57 @@
 </head>
 <body>
 
-<div layout:fragment="content" class="col-lg-10 my-4">
-    <h1>Quản lý Mã Giảm Giá</h1>
+<div layout:fragment="content" class="container my-4">
+    <h1 class="mb-4">Quản lý Mã Giảm Giá</h1>
+
+    <!-- Form tìm kiếm -->
+    <form method="GET" action="/admin/giamgia" class="form-inline mb-3">
+        <input type="text" name="keyword" class="form-control mr-2" placeholder="Tìm kiếm mã giảm giá..." th:value="${keyword}" required>
+        <button type="submit" class="btn btn-primary">Tìm</button>
+    </form>
+
     <a href="/admin/giamgia/them" class="btn btn-success mb-3">Thêm mã giảm giá</a>
 
-    <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th>Mã Giảm Giá</th>
-            <th>Loại</th>
-            <th>Giá Trị</th>
-            <th>Ngày tạo</th>
-            <th>Số lượng</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="mgg : ${mgglist}">
-            <td th:text="${mgg.ten}"></td>
-            <td th:text="${mgg.loaiGiamGia}"></td>
-            <td>
-                <span th:if="${mgg.loaiGiamGia == 'Phần trăm'}" th:text="${mgg.giaTriGiamGia} + '%'" ></span>
-                <span th:if="${mgg.loaiGiamGia == 'Tiền mặt'}" th:text="${#numbers.formatDecimal(mgg.giaTriGiamGia, 0, 2)} + ' VNĐ'" ></span>
-            </td>
-            <td th:text="${mgg.ngayTao}"></td>
-            <td th:text="${mgg.soLuong}"></td>
-            <td th:text="${mgg.trangThai} ? 'Hoạt động' : 'Không hoạt động'"></td>
-            <td>
-                <a class="btn btn-primary btn-sm" th:href="@{/admin/giamgia/sua/{id}(id=${mgg.id})}">Sửa</a>
-                <a class="btn btn-danger btn-sm" th:href="@{/admin/giamgia/xoa/{id}(id=${mgg.id})}" onclick="return confirm('Bạn có chắc chắn muốn xóa?');">Xóa</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <!-- Bảng danh sách mã giảm giá -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th>Tên Giảm Giá</th>
+                <th>Loại</th>
+                <th>Giá Trị</th>
+                <th>Giá Trị Tối Thiểu</th>
+                <th>Số lượng</th>
+                <th>Ngày bắt đầu</th>
+                <th>Ngày kết thúc</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="mgg : ${mgglist}">
+                <td th:text="${mgg.ten}"></td>
+                <td th:text="${mgg.loaiGiamGia == 'Phần trăm' or mgg.loaiGiamGia == 'phan_tram' ? 'Phần trăm' : 'Tiền mặt'}"></td>
+                <td>
+                        <span th:if="${mgg.loaiGiamGia == 'Phần trăm' or mgg.loaiGiamGia == 'phan_tram'}"
+                              th:text="${mgg.giaTriGiamGia} + '%'"></span>
+                    <span th:if="${mgg.loaiGiamGia == 'Tiền mặt' or mgg.loaiGiamGia == 'tien_mat'}"
+                          th:text="${#numbers.formatDecimal(mgg.giaTriGiamGia, 0, 2) + ' VNĐ'}"></span>
+                </td>
+                <td th:text="${#numbers.formatDecimal(mgg.giaTriGiamGiaToiDa, 0, 2) + ' VNĐ'}"></td>
+                <td th:text="${mgg.soLuong}"></td>
+                <td th:text="${#dates.format(mgg.ngayBatDau, 'dd/MM/yyyy')}"></td>
+                <td th:text="${#dates.format(mgg.ngayKetThuc, 'dd/MM/yyyy')}"></td>
+                <td th:text="${mgg.trangThai == 1 ? 'Hoạt động' : 'Không hoạt động'}"></td>
+                <td>
+                    <a class="btn btn-primary btn-sm" th:href="@{/admin/giamgia/sua/{id}(id=${mgg.id})}">Cập nhật</a>
+                    <a class="btn btn-danger btn-sm" th:href="@{/admin/giamgia/xoa/{id}(id=${mgg.id})}"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa?');">Xóa</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 </body>

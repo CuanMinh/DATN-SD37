@@ -40,19 +40,24 @@ public class MaGiamGia {
     @Column(name = "gia_tri_giam_gia")
     private BigDecimal giaTriGiamGia;
 
+    @Column(name = "gia_tri_giam_gia_toi_da")
+    private BigDecimal giaTriGiamGiaToiDa;
+
     @Column(name = "so_luong")
     private Integer soLuong;
 
-    @Column(name = "ngay_tao")
+    @Column(name = "ngay_bat_dau")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayTao;
+    private Date ngayBatDau;
 
-    @Column(name = "ngay_cap_nhap")
+    @Column(name = "ngay_ket_thuc")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayCapNhap;
+    private Date ngayKetThuc;
 
     @Column(name = "trang_thai")
     private Integer trangThai;
+
+
 }

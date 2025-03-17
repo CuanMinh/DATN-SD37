@@ -32,6 +32,9 @@ public class SanPham {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "ma")
+    private String ma;
+
     @Column(name = "ten")
     private String ten;
 

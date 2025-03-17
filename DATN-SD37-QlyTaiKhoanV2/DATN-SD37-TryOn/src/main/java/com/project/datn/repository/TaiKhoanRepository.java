@@ -13,11 +13,13 @@ import java.util.Optional;
 
 @Repository
 public interface TaiKhoanRepository  extends JpaRepository<TaiKhoan, Long> {
+    TaiKhoan findByTen(String ten);
+
     @Query(value = "SELECT TOP 1 * FROM tai_khoan WHERE email = ? AND trang_thai = 1", nativeQuery = true)
     Optional<TaiKhoan> FindByEmail(String email);
 
     @Query(value = "SELECT TOP 1 * FROM tai_khoan WHERE ten = ? AND trang_thai = 1", nativeQuery = true)
-    Optional<TaiKhoan> findByTen(String ten);
+    Optional<TaiKhoan> FindByTen(String ten);
 
 
 //    TaiKhoan findByCustomer_PhoneNumber(String phoneNumber);
@@ -38,4 +40,6 @@ public interface TaiKhoanRepository  extends JpaRepository<TaiKhoan, Long> {
     boolean existsByTenAndIdNot(String ten, Long id);
     boolean existsByEmailAndIdNot(String email, Long id);
     boolean existsBySoDienThoaiAndIdNot(String soDienThoai, Long id);
+
+
 }

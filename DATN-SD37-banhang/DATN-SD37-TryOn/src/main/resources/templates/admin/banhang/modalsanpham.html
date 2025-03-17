@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="exampleModal" class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="width: 100%; max-height: 100%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm Sản phẩm muốn mua</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div th:fragment="modalContent" class="modal-body" id="modal-content-sanpham">
+                <!-- Thêm hidden input chứa maHoaDon -->
+                <input type="hidden" id="maHoaDonHidden" th:value="${selectedHoaDon.maHoaDon}"/>
+                <!-- Thanh tìm kiếm theo tên hoặc mã sản phẩm -->
+                <div class="input-group input-group-sm mb-3" style="max-width: 300px;">
+                    <input type="text" class="form-control form-control-sm" id="searchSanPham"
+                           placeholder=" Nhập tên hoặc mã sản phẩm" aria-label="Tìm kiếm theo tên hoặc mã sản phẩm"
+                           aria-describedby="button-addon">
+                    <button class="btn btn-primary btn-sm" type="button" id="button-addon" onclick="searchSanPham()">Tìm
+                        kiếm
+                    </button>
+                </div>
+                <table class="table table-bordered table-hover mt-3"
+                       style="font-size: 14px; border-radius: 10px; overflow: hidden;">
+                    <thead class="table-primary text-center">
+                    <tr>
+                        <th>STT</th>
+                        <th>Hình ảnh</th>
+                        <th>Thông tin</th>
+                        <th>Màu</th>
+                        <th>Kích cỡ</th>
+                        <th>Đơn giá</th>
+                        <th>Số lượng</th>
+                        <th>Chức năng</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(chitietsanpham.content)}">
+                        <td colspan="8" class="text-center text-muted">Không có sản phẩm nào</td>
+                    </tr>
+                    <tr th:each="item,iterStat : ${chitietsanpham.content}" class="align-middle">
+                        <td class="text-center"
+                            th:text="${iterStat.index + 1 + (chitietsanpham.number * chitietsanpham.size)}">
+                        </td>
+                        <td class="text-center">
+                            <img th:if="${hinhAnh[item.id] != null}"
+                                 th:src="@{'/getproduct/' + ${hinhAnh[item.id].duongDan}}"
+                                 alt="Hình ảnh sản phẩm" class="rounded" width="80" height="80">
+                        </td>
+                        <td class="text-wrap">
+                            <span class="fw-bold">Tên:</span> <span th:text="${item.sanPham.ten}"></span><br>
+                            <span class="fw-bold">Mã:</span> <span th:text="${item.sanPham.ma}"></span><br>
+                            <span class="fw-bold">Giá Giảm:</span>
+                            <span class="text-danger"
+                                  th:text="${item.giamGia != null ? #numbers.formatDecimal(item.giamGia, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}"></span>
+                            <br>
+                        </td>
+                        <td class="text-center" th:text="${item.mauSac.ten}"></td>
+                        <td class="text-center" th:text="${item.kichCo.ten}"></td>
+                        <!-- Giá -->
+                        <td class="text-center">
+                            <!-- Nếu có giảm giá -->
+                            <div th:if="${item.giamGia != null}">
+                                <del class="text-muted">
+                                    <span th:text="${#numbers.formatDecimal(item.gia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                                </del>
+                                <br>
+                                <span class="fw-bold text-success"
+                                      th:text="${#numbers.formatDecimal(item.gia - item.giamGia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                            </div>
+
+                            <!-- Nếu không có giảm giá, chỉ hiển thị giá gốc -->
+                            <div th:if="${item.giamGia == null}"><span class="fw-bold text-success"
+                                                                       th:text="${#numbers.formatDecimal(item.gia, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                            </div>
+                        </td>
+                        <td class="text-center" th:text="${item.soLuong}"></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-primary"
+                                    th:data-idchitietsanpham="${item.id}"
+                                    th:data-idhoadon="${selectedHoaDon.id}"
+                                    th:data-ten="${item.sanPham.ten}"
+                                    th:data-mahoadon="${selectedHoaDon.maHoaDon}"
+                                    onclick="showConfigModalDialog(this.getAttribute('data-idchitietsanpham'), this.getAttribute('data-idhoadon'), this.getAttribute('data-ten'), this.getAttribute('data-mahoadon'))">
+                                <i class="fa fa-shopping-cart"></i> Mua
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div th:unless="${chitietsanpham != null and not #lists.isEmpty(chitietsanpham.content)}"
+                     class="alert alert-warning text-center">
+                    Không có sản phẩm nào
+                </div>
+                <!-- Phân trang sản phẩm trong modal -->
+                <nav th:if="${chitietsanpham.totalPages >= 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${chitietsanpham.first} ? 'disabled'">
+                            <a class="page-link" href="#" th:onclick="'loadModalContent(0)'"><<</a>
+                        </li>
+                        <li class="page-item" th:classappend="${chitietsanpham.first} ? 'disabled'">
+                            <a class="page-link" href="#"
+                               th:onclick="'loadModalContent(' + ${chitietsanpham.number - 1} + ')'"><</a>
+                        </li>
+                        <!-- Hiển thị các trang gần trang hiện tại (3 trang: 1 trước, hiện tại, 1 sau) -->
+                        <th:block th:each="i : ${#numbers.sequence(0, chitietsanpham.totalPages - 1)}">
+                            <th:block
+                                    th:if="${i >= chitietsanpham.number - 1 and i <= chitietsanpham.number + 1 and i < chitietsanpham.totalPages}">
+                                <li class="page-item" th:classappend="${i == chitietsanpham.number} ? 'active'">
+                                    <a class="page-link" href="#" th:onclick="'loadModalContent(' + ${i} + ')'"
+                                       th:text="${i + 1}"></a>
+                                </li>
+                            </th:block>
+                        </th:block>
+
+                        <!-- Hiển thị dấu "..." nếu có nhiều trang hơn -->
+                        <th:block th:if="${chitietsanpham.totalPages > 3}">
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#"
+                                   th:onclick="'loadModalContent(' + (${chitietsanpham.totalPages - 1}) + ')'"
+                                   th:text="${chitietsanpham.totalPages}"></a>
+                            </li>
+                        </th:block>
+                        <li class="page-item" th:classappend="${chitietsanpham.last} ? 'disabled'">
+                            <a class="page-link" href="#"
+                               th:onclick="'loadModalContent(' + ${chitietsanpham.number + 1} + ')'">></a>
+                        </li>
+                        <li class="page-item" th:classappend="${chitietsanpham.last} ? 'disabled'">
+                            <a class="page-link" href="#"
+                               th:onclick="'loadModalContent(' + ${chitietsanpham.totalPages - 1} + ')'">>></a>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- end phân trang sản phẩm -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

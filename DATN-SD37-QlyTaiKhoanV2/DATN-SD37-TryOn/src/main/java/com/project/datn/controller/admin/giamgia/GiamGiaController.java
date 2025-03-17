@@ -10,6 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -19,8 +20,15 @@ public class GiamGiaController {
     private MaGiamGiaRepository maGiamGiaRepository;
 
     @GetMapping
-    public String danhSachMaGiamGia(Model model) {
-        model.addAttribute("mgglist", maGiamGiaRepository.findAll());
+    public String danhSachMaGiamGia(Model model, @RequestParam(value = "keyword", required = false) String keyword) {
+        List<MaGiamGia> dsMaGiamGia;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            dsMaGiamGia = maGiamGiaRepository.searchByTenGiamGia(keyword);
+        } else {
+            dsMaGiamGia = maGiamGiaRepository.findAll();
+        }
+        model.addAttribute("mgglist", dsMaGiamGia);
+        model.addAttribute("keyword", keyword);
         return "admin/giamgia/giamgia";
     }
 

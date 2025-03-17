@@ -19,8 +19,8 @@ public class IEmailTemplateServiceImpl implements IEmailTemplateService {
     @Override
     public void sendMaXacNhanToEmail(Integer mailType) {
 
-        final String username = "buidaithang16122003@gmail.com";
-        final String password = "mật khẩu ứng dụng"; // mật khẩu ứng dụng
+        final String username = "ducng26703@gmail.com";
+        final String password = "mxtrfvhdevnqmdaw"; // mật khẩu ứng dụng
 
         // Cài đặt thông tin host và port cho Gmail
         Properties props = new Properties();

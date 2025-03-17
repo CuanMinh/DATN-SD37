@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+>
+<head>
+    <meta charset="UTF-8">
+    <title>Menu Admin</title>
+</head>
+<body>
+<div class="col-lg-2 my-4 menu-container" th:fragment="menu">
+    <div class="card mb-4 text-center menu-container">
+
+        <p class="card-header" style="font-size: 20px; font-weight: 1000;">ADMIN</p>
+        <div class="list-group list-group-flush">
+
+            <a class="list-group-item mb-2" style="border: none !important;" href="#"> <i class="fa fa-home mr-1"></i>Trang
+                chủ</a>
+            <a class="list-group-item mb-2" style="border: none !important;" th:id="${menuB}"
+               th:href="@{/admin/banhang}"> <i class="fa fa-shopping-bag mr-1" aria-hidden="true"></i> Bán hàng tại quầy</a>
+
+            <p class="card-header" style="font-size: 20px; font-weight: 1000;">QUẢN LÝ</p>
+
+            <!--            sản phẩm-->
+            <a class="list-group-item d-flex justify-content-between align-items-center mb-2"
+               style="border: none !important;"
+               data-toggle="collapse" href="#collapseProduct" role="button"
+               aria-expanded="false" aria-controls="collapseProduct"> <i class="fa fa-tags mr-1" aria-hidden="true"></i>
+                Quản Lý sản phẩm <span class="arrow-indicator">▸</span>
+            </a>
+            <div class="collapse submenu mb-2" id="collapseProduct">
+                <a class="list-group-item" th:id="${menuP}" th:href="@{/admin/sanpham}"> <i class="fa fa-refresh mr-1" aria-hidden="true"></i> sản phẩm</a>
+                <a class="list-group-item" th:id="${menuThuongHieu}" th:href="@{/admin/thuonghieu}"> <i class="fa fa-refresh mr-1" aria-hidden="true"></i> thương hiệu</a>
+                <a class="list-group-item" th:id="${menuDanhMuc}" th:href="@{/admin/danhmuc}"> <i class="fa fa-refresh mr-1" aria-hidden="true"></i> danh mục</a>
+                <a class="list-group-item" th:id="${menuChatLieu}" th:href="@{/admin/chatlieu}"> <i class="fa fa-refresh mr-1" aria-hidden="true"></i> chất liệu</a>
+                <a class="list-group-item" th:id="${menuKichCo}" th:href="@{/admin/kichco}"> <i class="fa fa-refresh mr-1" aria-hidden="true"></i> kích cỡ</a>
+                <a class="list-group-item mb-2" th:id="${menuMauSac}" th:href="@{/admin/mausac}"> <i class="fa fa-refresh mr-1" aria-hidden="true"></i> màu sắc</a>
+            </div>
+
+            <!--        Hoá đơn    -->
+            <a class="list-group-item d-flex justify-content-between align-items-center mb-2"
+               data-toggle="collapse" href="#collapseHoaDon" role="button"
+               aria-expanded="false" aria-controls="collapseHoaDon">
+                <i class="fa fa-shopping-basket mr-1" aria-hidden="true"></i>  Quản lý hoá đơn <span class="arrow-indicator">▸</span>
+            </a>
+            <div class="collapse submenu mb-2" id="collapseHoaDon">
+                <a class="list-group-item" th:id="${menuH}" th:href="@{/admin/hoadon}"><i class="fa fa-truck mr-1" aria-hidden="true"></i> Quản lý hoá đơn</a>
+                <a class="list-group-item mb-2" th:id="${menuD}" th:href="@{/admin/doitra}"> <i class="fa fa-exchange mr-1" aria-hidden="true"></i>Đổi trả</a>
+            </div>
+
+            <!-- tài khoản -->
+            <a class="list-group-item d-flex justify-content-between align-items-center mb-2"
+               data-toggle="collapse" href="#collapseAccount" role="button"
+               aria-expanded="false" aria-controls="collapseAccount">
+                <i class="fa fa-user-plus mr-1" aria-hidden="true"></i> Quản lý tài khoản <span class="arrow-indicator">▸</span>
+            </a>
+            <div class="collapse submenu mb-2" id="collapseAccount">
+                <a class="list-group-item" th:id="${menuN}" th:href="@{/admin/nhanvien}"><i
+                        class="fa fa-user-circle mr-1" aria-hidden="true"></i> Nhân viên</a>
+                <a class="list-group-item mb-2" th:id="${menuK}" th:href="@{/admin/khachhang}"> <i
+                        class="fa fa-user mr-1" aria-hidden="true"></i>Khách hàng</a>
+            </div>
+
+            <!-- Khuyến mãi-->
+            <a class="list-group-item d-flex justify-content-between align-items-center mb-2"
+               data-toggle="collapse" href="#collapseGiamGia" role="button"
+               aria-expanded="false" aria-controls="collapseGiamGia">
+                <i class="fa fa-percent mr-1" aria-hidden="true"></i> Quản lý Khuyến mãi <span class="arrow-indicator">▸</span>
+            </a>
+            <div class="collapse submenu mb-2" id="collapseGiamGia">
+                <a class="list-group-item mb-2" th:id="${menuG}" th:href="@{/admin/giamgia}"> <i class="fa fa-tag mr-1" aria-hidden="true"></i> Mã giảm giá</a>
+            </div>
+            <!--Thống kê-->
+            <a class="list-group-item d-flex justify-content-between align-items-center mb-2"
+               data-toggle="collapse" href="#collapseThongKe" role="button"
+               aria-expanded="false" aria-controls="collapseThongKe"> <i class="fa fa-line-chart mr-1"
+                                                                         aria-hidden="true"></i>
+                Quản lý thống kê <span class="arrow-indicator">▸</span>
+            </a>
+            <div class="collapse submenu mb-2" id="collapseThongKe">
+                <a class="list-group-item " th:id="${menuDT}" th:href="@{/admin/thongkedoanhthu}"> <i
+                        class="fa fa-pie-chart mr-1" aria-hidden="true"></i>Doanh Thu</a>
+                <a class="list-group-item mb-2" th:id="${menuSP}" th:href="@{/admin/thongkesanpham}"> <i
+                        class="fa fa-bar-chart mr-1" aria-hidden="true"></i>Sản Phẩm</a>
+            </div>
+
+            <!--            công cụ khác-->
+            <a class="list-group-item d-flex justify-content-between align-items-center mb-2"
+               data-toggle="collapse" href="#collapseKhac" role="button"
+               aria-expanded="false" aria-controls="collapseKhac">
+                công cụ khác <span class="arrow-indicator">▸</span>
+            </a>
+            <div class="collapse submenu mb-2" id="collapseKhac">
+                <a class="list-group-item mb-2">Quản lý banner</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>
