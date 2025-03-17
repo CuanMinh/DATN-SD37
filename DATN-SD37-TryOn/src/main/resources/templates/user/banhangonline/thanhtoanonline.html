@@ -51,7 +51,7 @@
         }
 
         .price-text {
-            color: #f8d210; /* Màu vàng cho giá */
+            color: #f8d210;
         }
 
         a.text-primary {
@@ -188,10 +188,10 @@
 
             let html = shippingMethods.map(method => `
         <div class="form-check">
-            <input class="form-check-input" type="radio" name="shippingMethod"
+            <input class="form-check-input text-dark" type="radio" name="shippingMethod"
                    id="${method.id}" value="${method.price}"
                    data-price="${method.price}" data-code="${method.code}">
-            <label class="form-check-label" for="${method.id}">
+            <label class="form-check-label text-dark" for="${method.id}">
                 ${method.name} (${method.price.toLocaleString()}đ)
             </label>
         </div>
@@ -415,26 +415,82 @@
             const thanhPho = document.getElementById('thanhPho').value.trim();
             const quanHuyen = document.getElementById('quanHuyen').value.trim();
             const phuongXa = document.getElementById('phuongXa').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const ghiChu = document.getElementById('ghiChu').value.trim();
 
             const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
             if (!hoTen) {
-                alert("Họ và tên không được để trống!");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Họ và tên không được để trống!',
+                    confirmButtonText: 'OK'
+                });
                 return false;
             }
-            if (!soDienThoai || !phoneRegex.test(soDienThoai)) {
-                alert("Số điện thoại không hợp lệ!");
+             if (!email) {
+                 Swal.fire({
+                     icon: 'error',
+                     title: 'Lỗi',
+                     text: 'email không được để trống!',
+                     confirmButtonText: 'OK'
+                 });
+                return false;
+            }
+
+            if (!soDienThoai) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Số điện thoại không được để trống!',
+                    confirmButtonText: 'OK'
+                });
+                return false;
+            }
+            if (!phoneRegex.test(soDienThoai)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Số điện thoại phải đúng 10 chữ số và bắt đầu bằng số 0!',
+                    confirmButtonText: 'OK'
+                });
+                return false;
+            }
+
+            if (!ghiChu) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Địa chỉ cụ thể không được để trống!',
+                    confirmButtonText: 'OK'
+                });
                 return false;
             }
             if (!thanhPho) {
-                alert("Thành phố không được để trống!");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Thành phố không được để trống!',
+                    confirmButtonText: 'OK'
+                });
                 return false;
             }
             if (!quanHuyen) {
-                alert("Quận/Huyện không được để trống!");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Quận/Huyện không được để trống!',
+                    confirmButtonText: 'OK'
+                });
                 return false;
             }
             if (!phuongXa) {
-                alert("Phường/Xã không được để trống!");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Phường/Xã không được để trống!',
+                    confirmButtonText: 'OK'
+                });
                 return false;
             }
             return true;
@@ -444,13 +500,30 @@
         function submitCheckout(event) {
             event.preventDefault();
             if (!validateCheckoutForm()) {
-                alert("Vui lòng điền đầy đủ thông tin giao hàng!");
+                // alert("Vui lòng điền đầy đủ thông tin giao hàng!");
                 return false;
             }
 
             const selectedPaymentMethod = document.querySelector('input[name="idPhuongThucThanhToan"]:checked');
+            const selectedShippingMethod = document.querySelector('input[name="shippingMethod"]:checked');
+
+            if (!selectedShippingMethod) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Vui lòng chọn phương thức vận chuyển!',
+                    confirmButtonText: 'OK'
+                });
+                return false;
+            }
+
             if (!selectedPaymentMethod) {
-                alert("Vui lòng chọn phương thức thanh toán!");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Vui lòng chọn phương thức thanh toán!',
+                    confirmButtonText: 'OK'
+                });
                 return false;
             }
 
@@ -565,7 +638,7 @@
     </script>
 
 </head>
-<body>
+<body class="bg-light text-dark">
 
 <div class="container checkout-container py-5">
     <!-- Tiêu đề -->
@@ -593,22 +666,20 @@
                 <h4 class="mb-3 mt-3">Thông tin giao hàng</h4>
 
                 <!-- Card chứa thông tin tài khoản + form địa chỉ -->
-                <div class="card p-4">
+                <div class=" bg-light card p-4">
                     <!-- Thông tin tài khoản -->
                     <div class="d-flex align-items-center mb-3">
-                        <!--                    <img src="https://via.placeholder.com/50"-->
-                        <!--                         class="rounded-circle me-3" alt="User">-->
                         <div>
                             <p class="mb-1">
-                                <span th:text="${taiKhoan.ten}"></span>
-                                (<span th:text="${taiKhoan.email}"></span>)
+                                <span class="text-dark fw-bold" th:text="${taiKhoan.ten}"></span>
+                                (<span class="text-dark" th:text="${taiKhoan.email}"></span>)
                             </p>
                         </div>
                     </div>
 
                     <!-- Chọn địa chỉ giao hàng người mua từng dùng -->
                     <div class="mb-3">
-                        <label for="diaChiSelect" class="form-label">Chọn địa chỉ giao hàng từng dùng:</label>
+                        <label for="diaChiSelect" class="form-label text-dark">Chọn địa chỉ giao hàng từng dùng:</label>
                         <select id="diaChiSelect" name="idDiaChi" class="form-select" onchange="fillAddressInfo()">
                             <option value="">-- Chọn địa chỉ --</option>
                             <option th:each="dc : ${listDiaChi}"
@@ -627,33 +698,33 @@
                     <!-- Form nhập thông tin giao hàng -->
 
                     <div class="mb-3">
-                        <input type="text" name="diachi.ten" id="hoTen" class="form-control" placeholder="Họ và tên">
+                        <input type="text" name="diachi.ten" id="hoTen" class="form-control bg-white text-dark" placeholder="Họ và tên">
                     </div>
                     <div class="mb-3">
-                        <input type="email" id="email" class="form-control" placeholder="Email" th:value="${emailne}">
+                        <input type="email" id="email" class="form-control bg-white text-dark" placeholder="Email" th:value="${emailne}" readonly>
                     </div>
                     <div class="mb-3">
-                        <input type="text" name="diachi.soDienThoai" id="soDienThoai" class="form-control" placeholder="Số điện thoại">
+                        <input type="text" name="diachi.soDienThoai" id="soDienThoai" class="form-control bg-white text-dark" placeholder="Số điện thoại">
                     </div>
                     <div class="mb-3">
-                        <input type="text" name="hoadon.ghiChu" id="ghiChu" class="form-control" placeholder="ghi chú">
+                        <input type="text" name="hoadon.ghiChu" id="ghiChu" class="form-control bg-white text-dark" placeholder="Địa chỉ cụ thể">
                     </div>
                     <!-- Phần chọn Tỉnh/Quận/Huyện/Phường -->
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="thanhPho" class="form-label">Thành phố</label>
+                            <label for="thanhPho" class="form-label text-dark">Thành phố</label>
                             <select class="form-select" id="thanhPho" name="diachi.thanhPho">
                                 <option value="">Chọn thành phố</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="quanHuyen" class="form-label">Quận/Huyện</label>
+                            <label for="quanHuyen" class="form-label text-dark">Quận/Huyện</label>
                             <select class="form-select" id="quanHuyen" name="diachi.quanHuyen">
                                 <option value="">Chọn quận/huyện</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="phuongXa" class="form-label">Phường/Xã</label>
+                            <label for="phuongXa" class="form-label text-dark">Phường/Xã</label>
                             <select class="form-select" id="phuongXa" name="diachi.phuongXa">
                                 <option value="">Chọn phường/xã</option>
                             </select>
@@ -664,8 +735,8 @@
 
                 <!-- Phương thức vận chuyển -->
                 <h4 class="mt-4">Phương thức vận chuyển</h4>
-                <div class="card p-4">
-                    <p><strong>Chọn phương thức vận chuyển:</strong></p>
+                <div class=" bg-light card p-4">
+                    <p class="text-dark"><strong>Chọn phương thức vận chuyển:</strong></p>
                     <div id="shippingMethods">
                         <p class="text-muted">Vui lòng chọn tỉnh/thành để hiển thị phương thức vận chuyển.</p>
                     </div>
@@ -674,7 +745,7 @@
 
                 <!-- Phương thức thanh toán -->
                 <h4 class="mt-4">Phương thức thanh toán</h4>
-                <div class="card p-4">
+                <div class=" bg-light card p-4 text-dark">
                     <th:block th:each="p : ${listPhuongThucThanhToan}">
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="idPhuongThucThanhToan"
@@ -693,20 +764,20 @@
             <!-- Cột phải: Giỏ hàng & Thanh toán -->
             <div class="col-md-5">
                 <h4 class="mb-3 mt-3">Giỏ hàng</h4>
-                <div class="card p-4">
+                <div class="card p-4  bg-light">
                     <!-- Danh sách sản phẩm trong giỏ hàng -->
                     <th:block th:each="item : ${listGiohang.content}">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                             <!-- Hình ảnh sản phẩm -->
                             <img th:if="${hinhAnh[item.chiTietSanPham.id] != null}"
                                  th:src="@{'/getproduct/' + ${hinhAnh[item.chiTietSanPham.id].duongDan}}"
                                  alt="Hình ảnh sản phẩm" class="img-thumbnail rounded" width="80" height="80">
                             <div class="flex-grow-1 ms-3">
-                                <p class="mb-1" th:text="${item.chiTietSanPham.sanPham.ten}"></p>
-                                <small class="text-white-50"
-                                       th:text="${item.chiTietSanPham.mauSac.ten + ' / ' + item.chiTietSanPham.kichCo.ten + '/SL: x' +item.soLuong }"></small>
+                                <p class="mb-1 fw-bold text-dark" th:text="${item.chiTietSanPham.sanPham.ten}"></p>
+                                <small class="text-muted"
+                                       th:text="${item.chiTietSanPham.mauSac.ten + ' / ' + item.chiTietSanPham.kichCo.ten + ' / SL: x' + item.soLuong }"></small>
                             </div>
-                            <p class="price-text"
+                            <p class="fw-bold text-dark"
                                th:text="${#numbers.formatDecimal(item.donGia.multiply(item.soLuong), 0, 'COMMA', 0, 'POINT') + 'đ'}">
                             </p>
                         </div>
@@ -746,38 +817,39 @@
 
                     <!-- Mã giảm giá -->
                     <div class="mb-3">
-                        <input type="text" name="tenMaGiamGia" id="discountCode" class="form-control"
-                               placeholder="Mã giảm giá">
-                        <button type="button" class="btn btn-primary mt-2" onclick="applyDiscount(event)">Sử dụng</button>
+                        <input type="text" name="tenMaGiamGia" id="discountCode" class="form-control text-dark bg-white"
+                               placeholder="Nhập mã giảm giá">
+                        <button type="button" class="btn btn-outline-primary mt-2 w-100" onclick="applyDiscount(event)">Sử dụng</button>
                     </div>
 
-                    <!-- Tạm tính, Phí ship & Mã giảm giá -->
-                    <div class="summary-container p-3 border rounded bg-dark text-light">
+
+                    <!-- Tóm tắt đơn hàng -->
+                    <div class="p-3 border rounded bg-white">
                         <!-- Tạm tính -->
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <p class="text-muted fw-bold">Tạm tính</p>
-                            <p class="fw-bold text-white subtotal" th:name="tongTien"
+                            <p class="fw-bold text-dark">Tạm tính</p>
+                            <p class="fw-bold text-dark subtotal" th:name="tongTien"
                                th:text="${#numbers.formatDecimal(tongTamTinh, 0, 'COMMA', 0, 'POINT')} + 'đ'"></p>
                         </div>
 
                         <!-- Phí vận chuyển -->
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <p class="text-muted fw-bold">Phí vận chuyển</p>
-                            <p id="shippingFee" th:name="phiVanChuyen" class="fw-bold text-warning">0đ</p>
+                            <p class="fw-bold text-dark">Phí vận chuyển</p>
+                            <p id="shippingFee" th:name="phiVanChuyen" class="fw-bold text-dark">0đ</p>
                         </div>
 
                         <!-- Giá trị giảm giá -->
                         <div id="discountValueContainer" class="d-flex justify-content-between align-items-center mb-2"
                              style="display: none;">
-                            <p class="text-muted fw-bold">Giá trị giảm giá</p>
+                            <p class="fw-bold text-dark">Giá trị giảm giá</p>
                             <p id="discountValue" class="fw-bold text-success">0đ</p>
                         </div>
 
                         <!-- Tổng cộng -->
                         <hr class="border-secondary">
                         <div class="d-flex justify-content-between align-items-center">
-                            <p class="text-uppercase fw-bold fs-5">Tổng cộng</p>
-                            <p id="totalAmount" th:name="tongTienCuoiCung" class="fw-bold fs-5 text-primary">0đ</p>
+                            <p class="text-uppercase fw-bold fs-5 text-dark">Tổng cộng</p>
+                            <p id="totalAmount" th:name="tongTienCuoiCung" class="fw-bold fs-5 text-danger">0đ</p>
                         </div>
                     </div>
 
@@ -790,5 +862,7 @@
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!--    thông báo -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

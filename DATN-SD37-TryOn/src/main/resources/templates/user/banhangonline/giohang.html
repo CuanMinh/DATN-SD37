@@ -10,7 +10,7 @@
     <!-- Font Awesome (CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
-<body class="bg-dark text-white">
+<body class="bg-light text-dark">
 <div class="container py-4">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
@@ -26,7 +26,7 @@
         <div class="col-lg-8">
             <th:block th:if="${not #lists.isEmpty(listGiohang.content)}">
                 <th:block th:each="item : ${listGiohang}">
-                    <div class="card mb-3 bg-secondary">
+                    <div class="card mb-3 bg-light" style="border: none;">
                         <div class="card-body d-flex align-items-center">
                             <!-- Nút Xóa -->
                             <form th:action="@{/customer/giohang/xoa}" method="post" class="me-3">
@@ -43,37 +43,44 @@
                                 <!-- Tên sản phẩm -->
                                 <h5 th:text="${item.chiTietSanPham.sanPham.ten}"></h5>
                                 <!-- Thông tin chi tiết -->
-                                <p class="mb-1 text-white-50">
+                                <p class="mb-1 text-dark-50">
                                     <span th:text="'Màu: ' + ${item.chiTietSanPham.mauSac.ten}"></span> |
                                     <span th:text="'Size: ' + ${item.chiTietSanPham.kichCo.ten}"></span>
                                 </p>
                                 <span class="fw-bold text-danger"
                                       th:text="${#numbers.formatDecimal(item.donGia, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
                             </div>
-                            <!-- Chỉnh số lượng -->
-                            <div class="d-flex align-items-center">
-                                <form th:action="@{/customer/giohang/giam}" method="post" class="me-2">
-                                    <input type="hidden" name="idGioHang" th:value="${item.id}"/>
-                                    <button type="submit" class="btn btn-sm btn-secondary">
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- Nút Giảm -->
+                                <form th:action="@{/customer/giohang/giam}" method="post">
+                                    <input type="hidden" name="idGioHang" th:value="${item.id}" />
+                                    <button type="submit" class="btn btn-sm btn-danger shadow-sm">
                                         <i class="fa fa-minus"></i>
                                     </button>
                                 </form>
-                                <span class="mx-2" th:text="${item.soLuong}"></span>
-                                <form th:action="@{/customer/giohang/tang}" method="post" class="ms-2">
-                                    <input type="hidden" name="idGioHang" th:value="${item.id}"/>
-                                    <button type="submit" class="btn btn-sm btn-secondary">
+
+                                <!-- Hiển thị số lượng -->
+                                <span class="fw-bold text-dark" th:text="${item.soLuong}"></span>
+
+                                <!-- Nút Tăng -->
+                                <form th:action="@{/customer/giohang/tang}" method="post">
+                                    <input type="hidden" name="idGioHang" th:value="${item.id}" />
+                                    <button type="submit" class="btn btn-sm btn-success shadow-sm">
                                         <i class="fa fa-plus"></i>
                                     </button>
                                 </form>
-                                <form th:action="@{/customer/giohang/xemsanpham}" method="post" class="ms-2">
-                                    <input type="hidden" name="idsanpham" th:value="${item.chiTietSanPham.sanPham.id}"/>
-                                    <button type="submit" class="btn btn-sm btn-secondary">
-                                        <i class="fas fa-eye"></i> <!-- Font Awesome Icon -->
+
+                                <!-- Nút Xem sản phẩm -->
+                                <form th:action="@{/customer/giohang/xemsanpham}" method="post">
+                                    <input type="hidden" name="idsanpham" th:value="${item.chiTietSanPham.sanPham.id}" />
+                                    <button type="submit" class="btn btn-sm btn-primary shadow-sm">
+                                        <i class="fas fa-eye"></i>
                                     </button>
                                 </form>
                             </div>
                         </div>
                     </div>
+                    <hr>
                 </th:block>
             </th:block>
             <!-- Thông báo giỏ hàng trống -->
@@ -134,7 +141,7 @@
 
         <!-- Tóm tắt đơn hàng -->
         <div class="col-lg-4">
-            <div class="card bg-secondary">
+            <div class="card bg-light" style="border: none;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="fw-bold">Tổng cộng</span>

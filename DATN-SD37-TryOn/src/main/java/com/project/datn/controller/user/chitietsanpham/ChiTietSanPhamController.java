@@ -101,10 +101,10 @@ public class ChiTietSanPhamController {
             redirectAttributes.addFlashAttribute("error", "Không tìm id sản phẩm");
             return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
         }
-         if (soLuong == null) {
-             redirectAttributes.addFlashAttribute("error", "Bạn chưa nhập số lượng");
-             return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
-         }
+        if (soLuong == null) {
+            redirectAttributes.addFlashAttribute("error", "Bạn chưa nhập số lượng");
+            return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
+        }
 
         ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findByMauSac_IdAndKichCo_IdAndSanPham_Id(mauSacId, kichCoId, idSanPham);
 
@@ -120,24 +120,33 @@ public class ChiTietSanPhamController {
                 return new ModelAndView("redirect:/login");
             }
 
-            if(soLuong > chiTietSanPham.getSoLuong() ){
+            if (soLuong > chiTietSanPham.getSoLuong()) {
                 redirectAttributes.addFlashAttribute("error", "Số lượng bạn thêm quá số lượng trong kho - Số lượng trong kho còn: " + chiTietSanPham.getSoLuong());
                 return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
-            }else{
-                if (chiTietSanPham.getTrangThai() == 0){
-                    redirectAttributes.addFlashAttribute("error", "sản phẩm:" + chiTietSanPham.getSanPham().getTen() +"-màu:"+ chiTietSanPham.getMauSac().getTen()
-                    + "- kích cỡ:"+ chiTietSanPham.getKichCo().getTen() +"_ hiện tại đang ngừng kinh doanh ở shop TRYON");
+            } else {
+                if (chiTietSanPham.getTrangThai() == 0) {
+                    redirectAttributes.addFlashAttribute("error", "sản phẩm:" + chiTietSanPham.getSanPham().getTen() + "-màu:" + chiTietSanPham.getMauSac().getTen()
+                            + "- kích cỡ:" + chiTietSanPham.getKichCo().getTen() + "_ hiện tại đang ngừng kinh doanh ở shop TRYON");
                     return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
-                }else{
-                    Optional<GioHang> gioHangOptional = gioHangRepository.findByTaiKhoan_IdAndChiTietSanPham_Id(taiKhoan.getId(),chiTietSanPham.getId());
+                } else {
+                    Optional<GioHang> gioHangOptional = gioHangRepository.findByTaiKhoan_IdAndChiTietSanPham_Id(taiKhoan.getId(), chiTietSanPham.getId());
                     if (gioHangOptional.isPresent()) {
-                        int tongSoLuongMoi = gioHangOptional.get().getSoLuong() + soLuong;
-                        GioHang gioHang = gioHangOptional.get();
-                        gioHang.setSoLuong(tongSoLuongMoi);
-                        gioHangRepository.save(gioHang);
-                        redirectAttributes.addFlashAttribute("success", "Đã thêm sản phẩm vào giỏ hàng, Thành công");
-                        return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
-                    }else{
+
+                        int soLuongThemMoiDaTontai = gioHangOptional.get().getSoLuong() + soLuong;
+                        if (soLuongThemMoiDaTontai > gioHangOptional.get().getChiTietSanPham().getSoLuong()) {
+                            redirectAttributes.addFlashAttribute("error", "sản phẩm:" + chiTietSanPham.getSanPham().getTen() + "-màu:" + chiTietSanPham.getMauSac().getTen()
+                                    + "- kích cỡ:" + chiTietSanPham.getKichCo().getTen() + "_số lượng bạn đã có trong giỏ hàng là:"
+                                    + gioHangOptional.get().getSoLuong() + "bạn đã vượt quá số lượng trong kho là:" + gioHangOptional.get().getChiTietSanPham().getSoLuong());
+                            return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
+                        } else {
+                            int tongSoLuongMoi = gioHangOptional.get().getSoLuong() + soLuong;
+                            GioHang gioHang = gioHangOptional.get();
+                            gioHang.setSoLuong(tongSoLuongMoi);
+                            gioHangRepository.save(gioHang);
+                            redirectAttributes.addFlashAttribute("success", "Đã thêm sản phẩm vào giỏ hàng, Thành công");
+                            return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
+                        }
+                    } else {
                         // Tạo và thiết lập thông tin GioHang
                         GioHang gioHang = new GioHang();
                         gioHang.setSoLuong(soLuong);
@@ -159,6 +168,7 @@ public class ChiTietSanPhamController {
         redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
         return new ModelAndView("redirect:/login");
     }
+
     @PostMapping("/thanhtoannhanh")
     public ModelAndView thanhToanNhanh(@RequestParam("mauSac") Long mauSacId,
                                        @RequestParam("kichCo") Long kichCoId,
@@ -197,23 +207,31 @@ public class ChiTietSanPhamController {
                 return new ModelAndView("redirect:/login");
             }
 
-            if(soLuong > chiTietSanPham.getSoLuong() ){
+            if (soLuong > chiTietSanPham.getSoLuong()) {
                 redirectAttributes.addFlashAttribute("error", "Số lượng bạn thêm quá số lượng trong kho - Số lượng trong kho còn: " + chiTietSanPham.getSoLuong());
                 return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
-            }else{
-                if (chiTietSanPham.getTrangThai() == 0){
-                    redirectAttributes.addFlashAttribute("error", "sản phẩm:" + chiTietSanPham.getSanPham().getTen() +"-màu:"+ chiTietSanPham.getMauSac().getTen()
-                            + "- kích cỡ:"+ chiTietSanPham.getKichCo().getTen() +"_ hiện tại đang ngừng kinh doanh ở shop TRYON");
+            } else {
+                if (chiTietSanPham.getTrangThai() == 0) {
+                    redirectAttributes.addFlashAttribute("error", "sản phẩm:" + chiTietSanPham.getSanPham().getTen() + "-màu:" + chiTietSanPham.getMauSac().getTen()
+                            + "- kích cỡ:" + chiTietSanPham.getKichCo().getTen() + "_ hiện tại đang ngừng kinh doanh ở shop TRYON");
                     return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
-                }else{
-                    Optional<GioHang> gioHangOptional = gioHangRepository.findByTaiKhoan_IdAndChiTietSanPham_Id(taiKhoan.getId(),chiTietSanPham.getId());
+                } else {
+                    Optional<GioHang> gioHangOptional = gioHangRepository.findByTaiKhoan_IdAndChiTietSanPham_Id(taiKhoan.getId(), chiTietSanPham.getId());
                     if (gioHangOptional.isPresent()) {
-                        int tongSoLuongMoi = gioHangOptional.get().getSoLuong() + soLuong;
-                        GioHang gioHang = gioHangOptional.get();
-                        gioHang.setSoLuong(tongSoLuongMoi);
-                        gioHangRepository.save(gioHang);
-                        return new ModelAndView("redirect:/customer/giohang");
-                    }else{
+                        int soLuongThemMoiDaTontai = gioHangOptional.get().getSoLuong() + soLuong;
+                        if (soLuongThemMoiDaTontai > gioHangOptional.get().getChiTietSanPham().getSoLuong()) {
+                            redirectAttributes.addFlashAttribute("error", "sản phẩm:" + chiTietSanPham.getSanPham().getTen() + "-màu:" + chiTietSanPham.getMauSac().getTen()
+                                    + "- kích cỡ:" + chiTietSanPham.getKichCo().getTen() + "_số lượng bạn đã có trong giỏ hàng là:"
+                                    + gioHangOptional.get().getSoLuong() + "bạn đã vượt quá số lượng trong kho là:" + gioHangOptional.get().getChiTietSanPham().getSoLuong());
+                            return new ModelAndView("redirect:/chitietsanpham/xemchitietsanpham/" + idSanPham);
+                        } else {
+                            int tongSoLuongMoi = gioHangOptional.get().getSoLuong() + soLuong;
+                            GioHang gioHang = gioHangOptional.get();
+                            gioHang.setSoLuong(tongSoLuongMoi);
+                            gioHangRepository.save(gioHang);
+                            return new ModelAndView("redirect:/customer/giohang");
+                        }
+                    } else {
                         // Tạo và thiết lập thông tin GioHang
                         GioHang gioHang = new GioHang();
                         gioHang.setSoLuong(soLuong);

@@ -108,12 +108,26 @@ public class GiohangController {
     }
 
     @PostMapping("/tang")
-    public ModelAndView increaseQuantity(@RequestParam("idGioHang") Long id) {
+    public ModelAndView increaseQuantity(RedirectAttributes redirectAttributes,@RequestParam("idGioHang") Long id) {
         Optional<GioHang> optionalGioHang = gioHangRepository.findById(id);
         if (optionalGioHang.isPresent()) {
-            GioHang gioHang = optionalGioHang.get();
-            gioHang.setSoLuong(gioHang.getSoLuong() + 1);
-            gioHangRepository.save(gioHang);
+            int soLuongGioHang =optionalGioHang.get().getSoLuong();
+            int soLuongTrongKho = optionalGioHang.get().getChiTietSanPham().getSoLuong();
+            if (soLuongGioHang == soLuongTrongKho){
+                redirectAttributes.addFlashAttribute("error", "Sản phẩm: " + optionalGioHang.get().getChiTietSanPham().getSanPham().getTen()
+                        +" - màu:" + optionalGioHang.get().getChiTietSanPham().getMauSac().getTen() + " - kích cỡ:"+ optionalGioHang.get().getChiTietSanPham().getKichCo().getTen()
+                        + " - số lượng đã được thêm tối đa với số lượng trong kho là : " + soLuongTrongKho);
+                return new ModelAndView("redirect:/customer/giohang");
+            }else if(soLuongGioHang > soLuongTrongKho){
+                redirectAttributes.addFlashAttribute("error", "Sản phẩm: " + optionalGioHang.get().getChiTietSanPham().getSanPham().getTen()
+                        +" - màu:" + optionalGioHang.get().getChiTietSanPham().getMauSac().getTen() + " - kích cỡ:"+ optionalGioHang.get().getChiTietSanPham().getKichCo().getTen()
+                        + " - số lượng hiện tại là: " + soLuongGioHang + " đã vượt quá trong kho là : " + soLuongTrongKho + " bạn hãy trừ đi số lượng tương ứng với sản phẩm" );
+                return new ModelAndView("redirect:/customer/giohang");
+            }else{
+                GioHang gioHang = optionalGioHang.get();
+                gioHang.setSoLuong(gioHang.getSoLuong() + 1);
+                gioHangRepository.save(gioHang);
+            }
         }
         return new ModelAndView("redirect:/customer/giohang");
     }
