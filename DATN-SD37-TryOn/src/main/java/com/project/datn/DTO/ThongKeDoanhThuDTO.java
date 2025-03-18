@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DoanhThuTheoNgayDTO {
+public class ThongKeDoanhThuDTO {
     private int nam;
     private int thang;
     private int ngay;

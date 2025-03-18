@@ -93,6 +93,8 @@
                         </tbody>
                     </table>
                 </div>
+                <button type="button" onclick="exportToExcel()">Xuất báo cáo Excel</button>
+
 
             </div>
         </div>
@@ -132,6 +134,20 @@
                 }
             });
         });
+
+    </script>
+    <script>
+        function exportToExcel() {
+            const ngay = document.querySelector('input[name="ngay"]').value;
+            const thang = document.querySelector('input[name="thang"]').value;
+            const nam = document.querySelector('input[name="nam"]').value;
+
+            // Xây dựng URL với các tham số ngày, tháng, năm
+            const url = `/admin/thongkedoanhthu/export-excel?ngay=${ngay}&thang=${thang}&nam=${nam}`;
+
+            // Chuyển hướng để tải file Excel
+            window.location.href = url;
+        }
     </script>
 </div>
 </body>
