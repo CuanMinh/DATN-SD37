@@ -9,7 +9,7 @@
     <style>
         body { background: #f8f9fa; }
         .card { border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-        .card-header { background: #0d6efd; color: white; font-weight: bold; font-size: 1.2rem; }
+        .card-header { background: #0d6efd; color: white; font-weight: bold; font-size: 1.2rem; text-align: center; }
         .table th { background-color: #0d6efd; color: white; text-align: center; }
         .table td { text-align: center; vertical-align: middle; }
         .chart-container { width: 100%; height: 400px; }
@@ -20,20 +20,40 @@
     <div class="card">
         <div class="card-header">Thống kê sản phẩm bán chạy</div>
         <div class="card-body">
+            <!-- Bộ lọc chọn ngày -->
+            <form method="get" th:action="@{/admin/thongkesanpham}" class="mb-4 row">
+                <div class="col-md-4">
+                    <label class="form-label">Từ ngày:</label>
+                    <input type="date" name="startDate" class="form-control" th:value="${startDate}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Đến ngày:</label>
+                    <input type="date" name="endDate" class="form-control" th:value="${endDate}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Lọc</button>
+                </div>
+            </form>
+
             <div class="row">
-                <!-- Biểu đồ cột -->
-                <div class="col-md-6">
-                    <div class="chart-container mb-4">
-                        <canvas id="sanPhamChart"></canvas>
+                <!-- Kiểm tra nếu có dữ liệu mới hiển thị biểu đồ -->
+                <div th:if="${not #lists.isEmpty(danhSachThongKe)}">
+                    <div class="col-md-6">
+                        <div class="chart-container mb-4">
+                            <canvas id="sanPhamChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="sanPhamPieChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                <!-- Biểu đồ tròn -->
-                <div class="col-md-6">
-                    <div class="chart-container">
-                        <canvas id="sanPhamPieChart"></canvas>
-                    </div>
+                <div th:if="${#lists.isEmpty(danhSachThongKe)}" class="text-center text-danger my-4">
+                    <h5>Không có dữ liệu để hiển thị biểu đồ</h5>
                 </div>
             </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead>
@@ -44,12 +64,12 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="sanPham : ${sanPhamThongKeList}">
-                        <td th:text="${sanPham.maSanPham}"></td>
+                    <tr th:each="sanPham : ${danhSachThongKe}">
+                        <td th:text="${sanPham.sanPhamId}"></td>
                         <td th:text="${sanPham.tenSanPham}"></td>
                         <td th:text="${sanPham.soLuongBan}"></td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(sanPhamThongKeList)}">
+                    <tr th:if="${#lists.isEmpty(danhSachThongKe)}">
                         <td colspan="3" class="text-center text-danger">Không có dữ liệu</td>
                     </tr>
                     </tbody>
@@ -61,50 +81,122 @@
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    let sanPhamData = /*[[${sanPhamThongKeList}]]*/ [];
-    let labels = sanPhamData.map(sp => sp.tenSanPham);
-    let data = sanPhamData.map(sp => sp.soLuongBan);
+    let sanPhamData = /*[[${danhSachThongKe}]]*/ [];
+    console.log("Dữ liệu thống kê nhận được:", sanPhamData);
 
-    // Biểu đồ cột
-    let ctx = document.getElementById('sanPhamChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Số lượng bán',
-                data: data,
-                backgroundColor: '#0d6efd',
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: { beginAtZero: true }
+
+
+    if (sanPhamData.length > 0) {
+        let labels = sanPhamData.map(sp => sp.tenSanPham);
+        let data = sanPhamData.map(sp => sp.soLuongBan);
+
+        // Tạo màu ngẫu nhiên cho biểu đồ tròn
+        function generateColors(count) {
+            let colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(`hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`);
             }
+            return colors;
         }
+
+        let backgroundColors = generateColors(labels.length);
+
+        // Biểu đồ cột
+        let ctx = document.getElementById('sanPhamChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Số lượng bán',
+                    data: data,
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function(context) {
+                                return `Số lượng bán: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Biểu đồ tròn
+        let ctxPie = document.getElementById('sanPhamPieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tỷ lệ sản phẩm bán ra',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                let percentage = ((context.raw / total) * 100).toFixed(2);
+                                return `${context.label}: ${context.raw} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        let sanPhamData = /*[[${danhSachThongKe}]]*/ [];
+        console.log("Dữ liệu thống kê:", sanPhamData);
+
+        if (sanPhamData.length === 0) {
+            console.log("Không có dữ liệu để vẽ biểu đồ.");
+            return;
+        }
+
+        let labels = sanPhamData.map(item => item.tenSanPham);
+        let data = sanPhamData.map(item => item.soLuongBan);
+        console.log("Labels:", labels);
+        console.log("Data:", data);
+
+        let ctx = document.getElementById("sanPhamChart");
+        if (!ctx) {
+            console.error("Không tìm thấy thẻ canvas #sanPhamChart");
+            return;
+        }
+
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Số lượng bán",
+                    data: data,
+                    backgroundColor: "rgba(75, 192, 192, 0.2)",
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    borderWidth: 1
+                }]
+            }
+        });
     });
 
-    // Biểu đồ tròn
-    let ctxPie = document.getElementById('sanPhamPieChart').getContext('2d');
-    new Chart(ctxPie, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Tỷ lệ sản phẩm bán ra',
-                data: data,
-                backgroundColor: ['#0d6efd', '#dc3545', '#28a745', '#ffc107', '#17a2b8', '#6610f2'],
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
+
     /*]]>*/
 </script>
 </body>

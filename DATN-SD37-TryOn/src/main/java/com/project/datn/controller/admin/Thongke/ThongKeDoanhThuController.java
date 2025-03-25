@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
-
 @Controller
 @RequestMapping("/admin/thongkedoanhthu")
 public class ThongKeDoanhThuController {
@@ -26,28 +27,33 @@ public class ThongKeDoanhThuController {
     @Autowired
     private HoaDonService hoaDonService;
 
-    // Phương thức hiện tại để hiển thị doanh thu
+    // Hiển thị doanh thu với bộ lọc khoảng ngày
     @GetMapping("")
-    public String thongKeDoanhThu(@RequestParam(value = "ngay", required = false) Integer ngay,
+    public String thongKeDoanhThu(@RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+                                  @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+                                  @RequestParam(value = "ngay", required = false) Integer ngay,
                                   @RequestParam(value = "thang", required = false) Integer thang,
                                   @RequestParam(value = "nam", required = false) Integer nam,
                                   Model model) {
-        List<ThongKeDoanhThuDTO> doanhThuList = hoaDonService.layDoanhThu(ngay, thang, nam);
+        List<ThongKeDoanhThuDTO> doanhThuList = hoaDonService.layDoanhThu(startDate, endDate, ngay, thang, nam);
         model.addAttribute("doanhThuList", doanhThuList);
+        model.addAttribute("startDate", startDate);
+        model.addAttribute("endDate", endDate);
         model.addAttribute("ngay", ngay);
         model.addAttribute("thang", thang);
         model.addAttribute("nam", nam);
-        return "admin/thongke/doanhthu/thongkedoanhthu"; // file thymeleaf nằm ở thư mục templates/admin/
+        return "admin/thongke/doanhthu/thongkedoanhthu";
     }
 
-    // Phương thức mới để xuất báo cáo doanh thu ra file Excel
+    // Xuất báo cáo doanh thu ra file Excel với khoảng ngày
     @GetMapping("/export-excel")
-    public ResponseEntity<ByteArrayResource> exportExcel(@RequestParam(value = "ngay", required = false) Integer ngay,
+    public ResponseEntity<ByteArrayResource> exportExcel(@RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+                                                         @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+                                                         @RequestParam(value = "ngay", required = false) Integer ngay,
                                                          @RequestParam(value = "thang", required = false) Integer thang,
                                                          @RequestParam(value = "nam", required = false) Integer nam) throws IOException {
-        List<ThongKeDoanhThuDTO> doanhThuList = hoaDonService.layDoanhThu(ngay, thang, nam);
+        List<ThongKeDoanhThuDTO> doanhThuList = hoaDonService.layDoanhThu(startDate, endDate, ngay, thang, nam);
 
-        // Tạo workbook và sheet cho file Excel
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Doanh thu");
 
@@ -68,16 +74,15 @@ public class ThongKeDoanhThuController {
             row.createCell(3).setCellValue(doanhThu.getDoanhThu().doubleValue());
         }
 
-        // Tạo output stream và viết workbook vào output
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         workbook.write(byteArrayOutputStream);
         workbook.close();
 
-        // Đóng gói file Excel dưới dạng ByteArrayResource
         ByteArrayResource resource = new ByteArrayResource(byteArrayOutputStream.toByteArray());
 
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=doanhthu.xlsx")
                 .body(resource);
     }
+
 }

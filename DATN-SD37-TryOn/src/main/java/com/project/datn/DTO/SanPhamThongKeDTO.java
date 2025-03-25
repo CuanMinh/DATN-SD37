@@ -3,12 +3,17 @@ package com.project.datn.DTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class SanPhamThongKeDTO {
-    private Long sanPhamId;
+    private Integer sanPhamId;   // Nếu SQL trả về Integer
     private String tenSanPham;
     private Long soLuongBan;
-    private Double tongDoanhThu;
+    private BigDecimal tongDoanhThu;
 }
+
+

@@ -28,7 +28,6 @@
             padding: 6px 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            width: 80px;
         }
 
         .btn-primary {
@@ -58,9 +57,10 @@
             <div class="card-header">Thống Kê Theo Doanh Thu</div>
             <div class="card-body">
                 <form method="get" th:action="@{/admin/thongkedoanhthu}" class="mb-4 flex gap-3 items-center">
-                    <input type="number" name="ngay" th:value="${ngay}" placeholder="Ngày" min="1" max="31" class="input-field">
-                    <input type="number" name="thang" th:value="${thang}" placeholder="Tháng" min="1" max="12" class="input-field">
-                    <input type="number" name="nam" th:value="${nam}" placeholder="Năm" min="2020" max="2100" class="input-field">
+                    <label>Từ ngày:</label>
+                    <input type="date" name="startDate" th:value="${startDate}" class="input-field">
+                    <label>Đến ngày:</label>
+                    <input type="date" name="endDate" th:value="${endDate}" class="input-field">
                     <button type="submit" class="btn btn-primary">Lọc</button>
                 </form>
 
@@ -74,28 +74,22 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                         <tr>
-                            <th>Năm</th>
-                            <th>Tháng</th>
                             <th>Ngày</th>
                             <th>Doanh Thu</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="doanhThu : ${doanhThuList}">
-                            <td th:text="${doanhThu.nam}"></td>
-                            <td th:text="${doanhThu.thang}"></td>
                             <td th:text="${doanhThu.ngay}"></td>
                             <td th:text="${#numbers.formatDecimal(doanhThu.doanhThu, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(doanhThuList)}">
-                            <td colspan="4" class="text-center text-danger">Không có dữ liệu</td>
+                            <td colspan="2" class="text-center text-danger">Không có dữ liệu</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
                 <button type="button" onclick="exportToExcel()">Xuất báo cáo Excel</button>
-
-
             </div>
         </div>
     </div>
@@ -104,7 +98,7 @@
     <script th:inline="javascript">
         document.addEventListener("DOMContentLoaded", function () {
             const rawData = /*[[${doanhThuList}]]*/ [];
-            const labels = rawData.map(item => item.ngay + '/' + item.thang + '/' + item.nam);
+            const labels = rawData.map(item => item.ngay);
             const data = rawData.map(item => item.doanhThu);
 
             const ctx = document.getElementById('doanhThuChart').getContext('2d');
@@ -134,16 +128,14 @@
                 }
             });
         });
-
     </script>
     <script>
         function exportToExcel() {
-            const ngay = document.querySelector('input[name="ngay"]').value;
-            const thang = document.querySelector('input[name="thang"]').value;
-            const nam = document.querySelector('input[name="nam"]').value;
+            const startDate = document.querySelector('input[name="startDate"]').value;
+            const endDate = document.querySelector('input[name="endDate"]').value;
 
-            // Xây dựng URL với các tham số ngày, tháng, năm
-            const url = `/admin/thongkedoanhthu/export-excel?ngay=${ngay}&thang=${thang}&nam=${nam}`;
+            // Xây dựng URL với các tham số startDate và endDate
+            const url = `/admin/thongkedoanhthu/export-excel?startDate=${startDate}&endDate=${endDate}`;
 
             // Chuyển hướng để tải file Excel
             window.location.href = url;
