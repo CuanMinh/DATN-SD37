@@ -1,5 +1,7 @@
 package com.project.datn.controller.admin.Thongke;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.datn.DTO.SanPhamThongKeDTO;
 import com.project.datn.service.impl.SanPhamService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,28 +25,37 @@ public class ThongKeSanPhamController {
     @Autowired
     private SanPhamService sanPhamService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @GetMapping("")
     public String thongKeSanPham(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
-            Model model) {
+            Model model) throws JsonProcessingException {
 
-        // Nếu không có ngày bắt đầu và ngày kết thúc, mặc định lấy 30 ngày gần nhất
         if (startDate == null || endDate == null) {
             Calendar cal = Calendar.getInstance();
-            endDate = cal.getTime(); // Ngày hiện tại
+            endDate = cal.getTime();
             cal.add(Calendar.DAY_OF_MONTH, -30);
-            startDate = cal.getTime(); // 30 ngày trước
+            startDate = cal.getTime();
         }
 
         List<SanPhamThongKeDTO> danhSachThongKe = sanPhamService.getThongKeSanPham(startDate, endDate);
-        System.out.println("Danh sách sản phẩm bán chạy: " + danhSachThongKe);
+
+        String danhSachThongKeJson = objectMapper.writeValueAsString(danhSachThongKe);
 
         model.addAttribute("danhSachThongKe", danhSachThongKe);
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(danhSachThongKe);
+        System.out.println("DEBUG JSON: " + json);
+        model.addAttribute("danhSachThongKeJson", danhSachThongKeJson);
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
+        System.out.println("JSON: " + danhSachThongKeJson);
 
-        return "/admin/thongke/sanpham/thongkesanpham";
+
+        return "admin/thongke/sanpham/thongkesanpham";
     }
 }
 
